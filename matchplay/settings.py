@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure--62fyj!1cq$q+=gdw8ursj*)0a6((=89_0u$&a4p7u!k49gfm%
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'valerian-hizkia-matchplay.pbp.cs.ui.ac.id']
 
 
 # Application definition
