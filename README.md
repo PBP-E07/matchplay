@@ -27,7 +27,7 @@ Aplikasi ini dibagi menjadi beberapa modul.
 |```fields```| Modul ini berfungsi untuk mengurus segala macam hal yang berhubungan dengan lapangan. Hal-hal ini mencakup membuat, melihat, mengubah, dan menghapus lapangan yang ada (CRUD). Modul ini juga menyimpan review dan penilaian pengguna terhadap lapangan tersebut. |
 | ```matches``` | Modul ini berfungsi untuk menjalankan fitur matchmaking. Modul ini juga berfungsi untuk memberikan data matchmaking yang sedang berjalan. Modul ini juga nantinya akan mengurus fitur tournament antar tim. |
 | ```bookings``` | Modul ini berfungsi untuk mengurus pemesanan atau peminjaman sebuah lapangan. Beda dengan matchmaking, fitur ini digunakan untuk orang yang ingin menyewa sebuah lapangan secara langsung tanpa matchmaking dengan orang lain. |
-| ```party``` | Modul ini berfungsi untuk menjalankan fungsi party atau pembuatan tim. Modul ini nantinya akan mengurus anggota-anggota dari sebuah tim, nama tim, dan hal-hal lainnya yang berhubungan dengan tim. |
+| ```tournament``` | Modul ini berfungsi untuk menjalankan fungsi turnamen. Modul ini nantinya akan mengurus anggota-anggota dari sebuah tim, nama tim, dan hal-hal lainnya yang berhubungan dengan turnamen. |
 | ```equipment``` | Modul ini berfungsi untuk menjalankan fungsi peminjaman alat olahraga. |
 
 ## 📊 Sumber Initial Dataset
