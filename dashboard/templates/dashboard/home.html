@@ -1,0 +1,133 @@
+{% load currency %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard - Fields</title>
+
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 font-sans">
+    <div class="max-w-7xl mx-auto p-8">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6">Sports Field Dashboard</h1>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+      <div class="bg-white rounded-2xl shadow p-6">
+        <h2 class="text-gray-500 text-sm">Total Fields</h2>
+        <p class="text-3xl font-semibold text-indigo-600">{{ total_fields }}</p>
+      </div>
+      <div class="bg-white rounded-2xl shadow p-6">
+        <h2 class="text-gray-500 text-sm">Average Price</h2>
+        <p class="text-3xl font-semibold text-green-600">{{ avg_price | currency }}</p>
+      </div>
+      <div class="bg-white rounded-2xl shadow p-6">
+        <h2 class="text-gray-500 text-sm">Average Rating</h2>
+        <p class="text-3xl font-semibold text-yellow-500">⭐ {{ avg_rating }}</p>
+      </div>
+    </div>
+
+    <!-- Modal container -->
+    <div id="filterModal"
+        class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 w-96 shadow-lg">
+            <h2 class="text-xl font-semibold mb-4">Filter</h2>
+            <div id="filterContent">
+                <!-- Konten filter akan dimuat via AJAX -->
+                <p class="text-gray-500">Loading...</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="flex flex-wrap justify-between items-center mb-4 gap-3">
+        <div>
+            <h2 class="text-xl font-semibold text-gray-800">Daftar Lapangan</h2>
+        </div>
+
+        <div class="flex justify-end items-center gap-3">
+            <!-- Filter button -->
+            <button id="openFilterBtn" class="bg-blue-500 text-white px-4 py-1 rounded">
+                Filter
+            </button>
+
+            <div class="flex items-center gap-3">
+                <select id="perPageSelect" class="border rounded px-2 py-1.5 text-sm">
+                {% for choice in per_page_choices %}
+                    <option value="{{ choice }}" {% if current_per_page == choice %}selected{% endif %}>{{ choice }}</option>
+                {% endfor %}
+                </select>
+                <div id="pageInfo">{% include 'dashboard/page_info.html' %}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div id="tableContainer">
+        {% include 'dashboard/field_table.html' %}
+        {% include 'dashboard/pagination.html' %}
+    </div>
+  </div>
+</body>
+
+<script>
+const filterModal = document.getElementById('filterModal');
+const filterContent = document.getElementById('filterContent');
+const tableContainer = document.getElementById('tableContainer');
+const pageInfo = document.getElementById('pageInfo');
+
+// Open filter modal
+document.getElementById('openFilterBtn').addEventListener('click', async () => {
+    filterModal.classList.remove('hidden');
+    const res = await fetch("{% url 'filter_panel' %}");
+    const data = await res.json();
+    filterContent.innerHTML = data.html;
+
+    // Pasang listener tombol Close
+    document.getElementById('closeFilterBtn').addEventListener('click', () => {
+        filterModal.classList.add('hidden');
+    });
+
+    // Pasang listener form submit (AJAX filter)
+    document.getElementById('filterForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await applyFilter(new FormData(e.target));
+        filterModal.classList.add('hidden');
+    });
+});
+
+// Per-page change
+document.getElementById('perPageSelect').addEventListener('change', async (e) => {
+    const formData = new FormData(document.querySelector('#filterForm') || document.createElement('form'));
+    formData.set('per_page', e.target.value);
+    await applyFilter(formData);
+});
+
+// Pagination click (delegation)
+document.addEventListener('click', async (e) => {
+    if (e.target.matches('.page-link')) {
+        e.preventDefault();
+        const page = e.target.dataset.page;
+
+        // Tambahkan fallback, sama seperti listener 'perPageSelect'
+        const formData = new FormData(document.querySelector('#filterForm') || document.createElement('form'));
+
+        formData.set('page', page);
+        await applyFilter(formData);
+    }
+});
+async function applyFilter(formData) {
+    const params = new URLSearchParams(formData).toString();
+    const res = await fetch(`{% url 'dashboard_home' %}?${params}`, {
+    headers: { 'x-requested-with': 'XMLHttpRequest' }
+    });
+    const data = await res.json();
+    tableContainer.innerHTML = data.table_html + data.pagination_html;
+    pageInfo.innerHTML = data.page_info_html;
+}
+</script>
+
+</html>
