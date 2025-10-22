@@ -1,5 +1,12 @@
 from django.db import models
+from django.core.validators import MinValueValidator, MaxValueValidator
 
+class Facility(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.name
+    
 class Field(models.Model):
     SPORT_CATEGORY = [
         ('badminton', 'Badminton'),
@@ -20,10 +27,12 @@ class Field(models.Model):
     name = models.CharField(max_length=100)
     image = models.CharField(max_length=200)
     price = models.PositiveIntegerField()
-    rating = models.CharField(max_length=5)
+    rating = models.FloatField(
+        validators=[MinValueValidator(0.0), MaxValueValidator(5.0)]
+    )
     location = models.CharField(max_length=200)
     sport = models.CharField(max_length=20, choices=SPORT_CATEGORY)
-    facilities = models.JSONField(default=list)
+    facilities = models.ManyToManyField(Facility, blank=True)
     url = models.CharField(max_length=200)
 
     def __str__(self):

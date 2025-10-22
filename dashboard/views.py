@@ -1,15 +1,16 @@
-from django.shortcuts import render
 from django.core.paginator import Paginator
-from fields.models import Field
 from django.http import JsonResponse
+from django.shortcuts import render
 from django.template.loader import render_to_string
+from fields.models import Field
+from fields.forms import FieldForm
 
 def dashboard_home(request):
     field_list = Field.objects.all().order_by('name')
 
     total_fields = field_list.count()
     avg_price = round(sum(f.price for f in field_list) / total_fields, 2) if total_fields > 0 else 0
-    avg_rating = round(sum(float(f.rating) for f in field_list) / total_fields, 2) if total_fields > 0 else 0
+    avg_rating = round(sum(f.rating for f in field_list) / total_fields, 2) if total_fields > 0 else 0
 
     # ===== FILTERING =====
     # === CATEGORY ===
@@ -66,6 +67,24 @@ def dashboard_home(request):
     
     return render(request, 'dashboard/home.html', context)
 
+def add_field_ajax(request):
+    if request.method == 'POST':
+        form = FieldForm(request.POST)
+        if form.is_valid():
+            form.save()
+            # Render partial tabel terbaru
+            field_list = Field.objects.all().order_by('name')[:20]  # sesuaikan per_page
+            table_html = render_to_string('dashboard/field_table.html', {'page_obj': field_list}, request=request)
+            return JsonResponse({'success': True, 'table_html': table_html})
+        else:
+            # Kembalikan form beserta error
+            form_html = render_to_string('dashboard/add_field_form.html', {'form': form}, request=request)
+            return JsonResponse({'success': False, 'form_html': form_html})
+    else:
+        form = FieldForm()
+        form_html = render_to_string('dashboard/add_field_form.html', {'form': form}, request=request)
+        return JsonResponse({'form_html': form_html})
+    
 def filter_panel(request):
     html = render_to_string('dashboard/filter_panel.html', {
         'sport_categories': Field.SPORT_CATEGORY,

@@ -2,7 +2,7 @@
 
   <!-- Tombol Prev -->
   {% if page_obj.has_previous %}
-    <a href="#" class="page-link px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100" data-page="{{ page_obj.previous_page_number }}">
+    <a href="#" class="page-link px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-blue-100" data-page="{{ page_obj.previous_page_number }}">
       Prev
     </a>
   {% endif %}
@@ -14,7 +14,7 @@
                           {% if page_obj.number == num %}
                             bg-indigo-600 text-white border-indigo-600
                           {% else %}
-                            text-gray-700 bg-white border-gray-300 hover:bg-gray-100
+                            text-gray-700 bg-white border-gray-300 hover:bg-blue-100
                           {% endif %}"
          data-page="{{ num }}">
         {{ num }}
@@ -25,7 +25,7 @@
 
   <!-- Tombol Next -->
   {% if page_obj.has_next %}
-    <a href="#" class="page-link px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100" data-page="{{ page_obj.next_page_number }}">
+    <a href="#" class="page-link px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-blue-100" data-page="{{ page_obj.next_page_number }}">
       Next
     </a>
   {% endif %}
