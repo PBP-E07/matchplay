@@ -1,0 +1,233 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="mb-8">
+    <h1 class="text-4xl font-bold text-gray-900">Blog</h1>
+    <p class="text-lg text-gray-600 mt-1" id="blog-count-display">
+        Menampilkan <strong class="text-gray-900">{{ blog_count }} Artikel</strong>
+    </p>
+</div>
+
+<div id="blog-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    
+    {% for blog in blogs %}
+        {% include 'main/_blog_card.html' with blog=blog %}
+    {% empty %}
+        <div id="no-blogs-message" class="col-span-1 md:col-span-2 lg:col-span-3 text-center text-gray-500 p-10 bg-white rounded-lg shadow">
+            {% comment %} Ganti 'image/no-news.png' dengan path yang benar jika beda {% endcomment %}
+            <img src="{% static 'image/no-news.png' %}" alt="No News" class="mx-auto h-32 w-32 mb-4 opacity-50">
+            <p class="text-xl">Belum ada artikel.</p>
+        </div>
+    {% endfor %}
+</div>
+
+<button id="create-blog-btn" class="fixed bottom-6 right-6 bg-[#60AC00] hover:bg-[#519000] text-white p-4 rounded-full shadow-lg z-30 transition duration-300 ease-in-out transform hover:scale-110">
+    <i class="fas fa-plus fa-lg"></i>
+</button>
+{% endblock content %}
+
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    // --- Elemen Global ---
+    const modalBackdrop = document.getElementById('modal-backdrop');
+    const modal = document.getElementById('blog-modal');
+    const modalContent = document.getElementById('modal-content');
+    const createBlogBtn = document.getElementById('create-blog-btn'); // Cek ID ini
+    const blogGrid = document.getElementById('blog-grid');
+    const blogCountDisplay = document.getElementById('blog-count-display');
+    
+    // Kalo tombolnya gak ada, stop script
+    if (!createBlogBtn) {
+        console.error('Tombol Create (id="create-blog-btn") tidak ditemukan!');
+        return;
+    }
+    
+    // --- URLS ---
+    const createFormUrl = "{% url 'main:get-blog-form' %}";
+
+    // --- Helper Functions ---
+    function showModal() {
+        modalBackdrop.classList.remove('hidden');
+        modalBackdrop.classList.add('opacity-100');
+        modal.classList.remove('hidden');
+        void modal.offsetWidth; 
+        modal.classList.remove('scale-95', 'opacity-0');
+        modal.classList.add('scale-100', 'opacity-100');
+    }
+
+    function hideModal() {
+        modal.classList.add('scale-95', 'opacity-0');
+        modal.classList.remove('scale-100', 'opacity-100');
+        modalBackdrop.classList.add('opacity-0');
+        
+        setTimeout(() => {
+            modal.classList.add('hidden');
+            modalBackdrop.classList.add('hidden');
+            modalContent.innerHTML = ''; // Kosongkan modal
+        }, 300);
+    }
+
+    function getCsrfTokenFromCookie() {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, 10) === ('csrftoken' + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(10));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function updateBlogCount() {
+        const count = document.querySelectorAll('.blog-card').length;
+        blogCountDisplay.textContent = `Menampilkan ${count} Artikel`;
+        
+        const noBlogsMessage = document.getElementById('no-blogs-message');
+        if (count > 0 && noBlogsMessage) {
+            noBlogsMessage.style.display = 'none';
+        } else if (count === 0) {
+            if (!noBlogsMessage) {
+                blogGrid.innerHTML = `<div id="no-blogs-message" class="col-span-1 md:col-span-2 lg:col-span-3 text-center text-gray-500 p-10 bg-white rounded-lg shadow"><p class="text-xl">Belum ada artikel.</p><p>Mulai buat satu!</p></div>`;
+            } else {
+                noBlogsMessage.style.display = 'block';
+            }
+        }
+    }
+
+    // --- Event Listener 1: Tombol "Create Blog" (+) ---
+    // INI BAGIAN YANG NGEBUKA MODAL
+    createBlogBtn.addEventListener('click', () => {
+        console.log('Tombol + diklik! Fetching form...'); // Tes klik
+        fetch(createFormUrl)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Form HTML diterima:', data.html_form); // Tes dapet data
+                modalContent.innerHTML = data.html_form;
+                showModal();
+            })
+            .catch(error => {
+                console.error('Error fetching form:', error);
+                alert('Gagal memuat form. Cek console (F12) untuk detail.');
+            });
+    });
+
+    // --- Event Listener 2: Tombol "Edit" & "Delete" (Event Delegation) ---
+    blogGrid.addEventListener('click', (e) => {
+        const editBtn = e.target.closest('.edit-btn');
+        const deleteBtn = e.target.closest('.delete-btn');
+
+        if (editBtn) {
+            const pk = editBtn.dataset.pk;
+            const editFormUrl = `/blog/${pk}/form/`;
+            
+            fetch(editFormUrl)
+                .then(response => response.json())
+                .then(data => {
+                    modalContent.innerHTML = data.html_form;
+                    showModal();
+                });
+        }
+
+        if (deleteBtn) {
+            const pk = deleteBtn.dataset.pk;
+            const deleteUrl = `/blog/${pk}/delete/`;
+
+            if (confirm('Yakin ingin menghapus blog ini?')) {
+                fetch(deleteUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCsrfTokenFromCookie(),
+                        'Content-Type': 'application/json'
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const cardToRemove = document.getElementById(`blog-card-${pk}`);
+                        cardToRemove.classList.add('opacity-0', 'scale-95');
+                        setTimeout(() => {
+                            cardToRemove.remove();
+                            updateBlogCount();
+                        }, 300);
+                    } else {
+                        alert('Gagal menghapus blog.');
+                    }
+                });
+            }
+        }
+    });
+
+    // --- Event Listener 3: Submit Form di Modal (Create / Update) ---
+    // Pastikan jQuery sudah di-load di base.html
+    $(document).on('submit', '#ajax-blog-form', function(e) {
+        e.preventDefault();
+        
+        const form = $(this);
+        const url = form.attr('data-url');
+        const formData = new FormData(this);
+
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            headers: {
+                'X-CSRFToken': getCsrfTokenFromCookie()
+            },
+            success: function(data) {
+                if (data.success) {
+                    if (data.new_card_html) {
+                        const noBlogsMessage = document.getElementById('no-blogs-message');
+                        if (noBlogsMessage) noBlogsMessage.style.display = 'none';
+                        
+                        const newCard = $(data.new_card_html).addClass('opacity-0 scale-95');
+                        $('#blog-grid').prepend(newCard);
+                        void newCard[0].offsetWidth; 
+                        newCard.removeClass('opacity-0 scale-95');
+
+                    } else if (data.updated_card_html) {
+                        const oldCard = $(`#blog-card-${data.pk}`);
+                        const updatedCard = $(data.updated_card_html);
+                        
+                        oldCard.addClass('opacity-0 scale-95');
+                        setTimeout(() => {
+                            oldCard.replaceWith(updatedCard);
+                            updatedCard.addClass('opacity-0 scale-95');
+                            void updatedCard[0].offsetWidth;
+                            updatedCard.removeClass('opacity-0 scale-95');
+                        }, 300);
+                    }
+                    hideModal();
+                    updateBlogCount();
+                } else {
+                    // Gagal validasi, render ulang form dengan errors
+                    $('#modal-content').html(data.html_form_with_errors);
+                }
+            },
+            error: function() {
+                alert('Terjadi kesalahan pada server. Silakan coba lagi.');
+            }
+        });
+    });
+
+    // --- Event Listener 4: Tutup Modal ---
+    $(document).on('click', '#modal-close-btn, #modal-close-btn-footer, #modal-backdrop', function() {
+        hideModal();
+    });
+});
+</script>
+{% endblock scripts %}

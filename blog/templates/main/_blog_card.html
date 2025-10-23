@@ -1,0 +1,39 @@
+{% comment %} 
+File: main/templates/main/_blog_card.html
+(Versi baru yang di-styling kayak target lo)
+{% endcomment %}
+
+<div class="blog-card bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 ease-in-out transform hover:shadow-xl hover:-translate-y-1" id="blog-card-{{ blog.pk }}">
+    <a href="{{ blog.get_absolute_url }}">
+    
+    <img src="{{ blog.thumbnail|default:'https://via.placeholder.com/400x250?text=No+Image' }}" alt="{{ blog.title }}" class="w-full h-48 object-cover">
+
+    
+    <div class="p-5">
+        
+        <h3 class="text-lg font-bold text-gray-900 mb-2 truncate">
+            {{ blog.title }}
+        </h3>
+        
+        <p class="text-sm text-gray-600 mb-4 h-16 overflow-hidden">
+            {{ blog.summary }}
+        </p>
+        
+        <div class="flex justify-between items-center pt-4 border-gray-100">
+            
+            <div class="flex space-x-3">
+                <button class="edit-btn text-sm text-gray-500 hover:text-blue-600 transition-colors" data-pk="{{ blog.pk }}">
+                    <i class="fas fa-edit mr-1"></i>Edit
+                </button>
+                <button class="delete-btn text-sm text-gray-500 hover:text-red-600 transition-colors" data-pk="{{ blog.pk }}">
+                    <i class="fas fa-trash mr-1"></i>Delete
+                </button>
+            </div>
+            
+            <a href="{{ blog.get_absolute_url }}" class="text-sm text-gray-700 font-medium hover:text-black">
+                Read More
+            </a>
+        </div>
+    </div>
+</a>
+</div>
