@@ -1,0 +1,73 @@
+<form id="addFieldForm" class="space-y-4">
+  {% csrf_token %}
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <!-- Name -->
+    <div>
+      <label class="font-medium space-y-1">{{ form.name.label }}</label>
+      {{ form.name }}
+    </div>
+
+    <!-- Sport -->
+    <div>
+      <label class="font-medium space-y-1">{{ form.sport.label }}</label>
+      {{ form.sport }}
+    </div>
+
+    <!-- Price -->
+    <div>
+      <label class="font-medium space-y-1">{{ form.price.label }}</label>
+      {{ form.price }}
+    </div>
+
+    <!-- Rating -->
+    <div>
+      <label class="font-medium space-y-1">{{ form.rating.label }}</label>
+      {{ form.rating }}
+    </div>
+
+    <!-- Location -->
+    <div class="md:col-span-2">
+      <label class="font-medium space-y-1">{{ form.location.label }}</label>
+      {{ form.location }}
+    </div>
+
+    <!-- Image URL -->
+    <div class="md:col-span-2">
+      <label class="font-medium space-y-1">Image (URL)</label>
+      {{ form.image }}
+    </div>
+
+    <!-- URL -->
+    <div class="md:col-span-2">
+      <label class="font-medium space-y-1">URL</label>
+      {{ form.url }}
+    </div>
+
+    <!-- Facilities -->
+    <div class="md:col-span-2 space-y-2">
+      <label class="font-medium">{{ form.facilities.label }}</label>
+      <div class="grid grid-cols-2 gap-2">
+        {% for checkbox in form.facilities %}
+          <div class="flex items-center space-x-2">
+            {{ checkbox.tag }}
+            <label class="m-0">{{ checkbox.choice_label }}</label>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Button layout -->
+  <div class="flex justify-between gap-2">
+    <!-- Left side: Tambahkan -->
+    <div>
+      <button type="submit" class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">Tambahkan</button>
+    </div>
+
+    <!-- Right side: Close -->
+    <div>
+      <button type="button" id="closeAddField" class="px-4 py-2 border rounded bg-gray-300 hover:bg-gray-400">Close</button>
+    </div>
+  </div>
+</form>
