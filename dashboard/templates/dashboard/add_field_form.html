@@ -62,7 +62,13 @@
   <div class="flex justify-between gap-2">
     <!-- Left side: Tambahkan -->
     <div>
-      <button type="submit" class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">Tambahkan</button>
+      <button type="submit" class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">
+        {% if form.instance.pk %}
+          Update
+        {% else %}
+          Tambahkan
+        {% endif %}
+      </button>
     </div>
 
     <!-- Right side: Close -->
