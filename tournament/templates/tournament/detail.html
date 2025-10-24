@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ tournament.name }} — MatchPlay{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-6 py-10">
+  <!-- Back -->
+  <a href="/tournament/" class="flex items-center text-gray-600 hover:text-green-600 mb-6">
+    <span class="mr-2 text-lg">←</span> Kembali ke Daftar Turnamen
+  </a>
+
+  <!-- Banner -->
+  <div class="rounded-2xl overflow-hidden shadow-md mb-8">
+    <img src="{{ tournament.banner_image|default:'https://via.placeholder.com/1000x300?text=Tournament+Banner' }}"
+         alt="{{ tournament.name }}"
+         class="w-full h-64 object-cover">
+  </div>
+
+  <!-- Card Detail -->
+  <div class="bg-white rounded-2xl shadow-md p-8 text-center">
+  
+    <!-- Tournament Name -->
+    <h1 class="text-2xl font-bold text-gray-900 mb-3">{{ tournament.name }}</h1>
+
+    <!-- Tournament Description -->
+    <p class="text-gray-600 mb-6">{{ tournament.description|default:"Belum ada deskripsi turnamen." }}</p>
+
+    <!-- Info Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 text-gray-700 text-sm justify-items-center">
+      <div class="flex items-center gap-2">
+        <img src="{% static 'tournament/icons/location.svg' %}" class="w-4 h-4" alt="Lokasi">
+        <span>{{ tournament.location }}</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <img src="{% static 'tournament/icons/team.svg' %}" class="w-4 h-4" alt="Tim">
+        <span>{{ tournament.teams.count }} Tim Terdaftar</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <img src="{% static 'tournament/icons/prize.svg' %}" class="w-4 h-4" alt="Hadiah">
+        <span>{{ tournament.prize_pool|default:"Belum ditentukan" }}</span>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+    <a href="/tournament/{{ tournament.id }}/matches/"
+      class="bg-orange-500 hover:bg-orange-600 text-white font-semibold px-6 py-2.5 rounded-lg shadow-sm transition">
+      Lihat Pertandingan
+    </a>
+
+    <a href="{% url 'tournament:join_tournament' tournament.id %}"
+      class="bg-green-500 hover:bg-green-600 text-white font-semibold px-6 py-2.5 rounded-lg shadow-sm transition">
+      Bergabung ke Turnamen
+    </a>
+
+    {% if user.is_authenticated and user == tournament.created_by %}
+    <a href="{% url 'tournament:edit_tournament' tournament.id %}"
+      class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-6 py-2.5 rounded-lg shadow-sm transition">
+      Edit Turnamen
+    </a>
+
+    <a href="{% url 'tournament:delete_tournament' tournament.id %}"
+      class="bg-red-500 hover:bg-red-600 text-white font-semibold px-6 py-2.5 rounded-lg shadow-sm transition">
+      Hapus Turnamen
+    </a>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

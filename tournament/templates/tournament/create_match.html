@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="max-w-lg mx-auto mt-10 bg-white shadow-md rounded-xl p-6">
+  <h1 class="text-2xl font-bold mb-6 text-center">Buat Pertandingan Baru</h1>
+
+  {% if error %}
+    <div class="bg-red-100 text-red-700 p-2 rounded mb-4">{{ error }}</div>
+  {% endif %}
+
+  <form method="POST" class="space-y-4">
+    {% csrf_token %}
+
+    <div>
+      <label class="block text-gray-700 font-medium mb-1">Pilih Tim 1</label>
+      <select name="team1" class="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-green-500">
+        {% for team in teams %}
+          <option value="{{ team.id }}">{{ team.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div>
+      <label class="block text-gray-700 font-medium mb-1">Pilih Tim 2</label>
+      <select name="team2" class="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-green-500">
+        {% for team in teams %}
+          <option value="{{ team.id }}">{{ team.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div>
+      <label class="block text-gray-700 font-medium mb-1">Round</label>
+      <input type="number" name="round_number" min="1" value="1"
+             class="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-green-500">
+    </div>
+
+    <button type="submit"
+      class="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 rounded-lg transition">
+      Simpan Pertandingan
+    </button>
+  </form>
+
+  <a href="{% url 'tournament:tournament_matches' tournament.id %}"
+     class="block text-center text-sm text-gray-500 mt-4 hover:underline">
+    ← Kembali ke daftar pertandingan
+  </a>
+</div>
+{% endblock %}
