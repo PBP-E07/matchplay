@@ -1,0 +1,57 @@
+<head>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+{% block content %}
+<main class="bg-gradient-to-r from-green-400 to-green-600 min-h-dvh py-8 w-full flex items-center justify-center">
+    <form method="POST" class="flex flex-col gap-8 bg-white mx-auto max-w-xl w-full rounded-2xl shadow-2xl p-8">
+        {% csrf_token %}
+    
+        <div class="font-semibold text-2xl">
+            Create Account
+        </div>
+
+        {% if form.non_field_errors %}
+            {% for error in form.non_field_errors %}
+                <div class="px-4 py-3 rounded text-sm border bg-red-50 border-red-200 text-red-700">
+                    {{ error }}
+                </div>
+            {% endfor %}
+        {% endif %} 
+            
+        {% if form.errors %}
+            {% for field, errors in form.errors.items %} 
+                {% if field != '__all__' %}
+                    {% for error in errors %}
+                        <div class="px-4 py-3 rounded text-sm border bg-red-50 border-red-200 text-red-700">
+                            <strong>{{ field | title }}:</strong> {{ error }}
+                        </div>
+                    {% endfor %}
+                {% endif %} 
+            {% endfor %}
+        {% endif %}
+
+        <div class="flex flex-col gap-2">
+            <label for="username">Username</label>
+
+            <input class="focus:border-green-600 outline-none border p-2 px-4 duration-200 rounded-md" id="username" name="username" type="text" required placeholder="Choose a username" />
+        </div>
+
+        <div class="flex flex-col gap-2">
+            <label for="password1">Password</label>
+
+            <input class="focus:border-green-600 outline-none border p-2 px-4 duration-200 rounded-md" id="password1" name="password1" type="password" required placeholder="●●●●●●●●" />
+        </div>
+
+        <div class="flex flex-col gap-2">
+            <label for="password2">Confirm Password</label>
+
+            <input class="focus:border-green-600 outline-none border p-2 px-4 duration-200 rounded-md" id="password2" name="password2" type="password" required placeholder="●●●●●●●●" />
+        </div>
+
+        <button class="bg-green-600 duration-200 hover:opacity-80 text-white font-bold p-2 shadow-2xl rounded-2xl">Register</button>
+    
+        <p class="w-full text-center">Already have an account? <a href="{% url 'authentication:show_login' %}" class="underline">Login</a></p>
+    </form>
+</main>
+{% endblock content %}

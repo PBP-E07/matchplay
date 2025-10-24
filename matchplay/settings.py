@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'dashboard',
     'fields',
     'equipment',
+    'authentication',
 ]
 
 MIDDLEWARE = [
