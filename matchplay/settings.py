@@ -47,7 +47,7 @@ INSTALLED_APPS = [
     'main',
     'dashboard',
     'fields',
-    'equipments',
+    'equipment',
 ]
 
 MIDDLEWARE = [
