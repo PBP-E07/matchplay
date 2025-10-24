@@ -2,6 +2,7 @@ from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.template.loader import render_to_string
+from django.views.decorators.csrf import csrf_exempt
 from fields.models import Field
 from fields.forms import FieldForm
 
@@ -38,7 +39,7 @@ def dashboard_home(request):
 
     # Melakukan paging
     paginator = Paginator(field_list, per_page)
-    page_number = request.GET.get('page')
+    page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
 
     context = {
@@ -62,7 +63,10 @@ def dashboard_home(request):
         return JsonResponse({
             'table_html': table_html,
             'pagination_html': pagination_html,
-            'page_info_html': page_info_html
+            'page_info_html': page_info_html,
+            'total_fields': total_fields,
+            'avg_price': avg_price,
+            'avg_rating': round(avg_rating, 2)
         })
     
     return render(request, 'dashboard/home.html', context)
@@ -84,7 +88,33 @@ def add_field_ajax(request):
         form = FieldForm()
         form_html = render_to_string('dashboard/add_field_form.html', {'form': form}, request=request)
         return JsonResponse({'form_html': form_html})
-    
+
+def edit_field_ajax(request, pk):
+    field_obj = Field.objects.get(pk=pk)
+    if request.method == 'POST':
+        form = FieldForm(request.POST, instance=field_obj)
+        if form.is_valid():
+            form.save()
+            field_list = Field.objects.all().order_by('name')
+            table_html = render_to_string('dashboard/field_table.html', {'field_list': field_list}, request=request)
+            return JsonResponse({'success': True, 'table_html': table_html})
+        else:
+            form_html = render_to_string('dashboard/add_field_form.html', {'form': form}, request=request)
+            return JsonResponse({'success': False, 'form_html': form_html})
+    else:
+        form = FieldForm(instance=field_obj)
+        form_html = render_to_string('dashboard/add_field_form.html', {'form': form}, request=request)
+        return JsonResponse({'form_html': form_html})
+
+@csrf_exempt
+def delete_field_ajax(request, pk):
+    if request.method == 'POST':
+        field_obj = Field.objects.get(pk=pk)
+        field_obj.delete()
+        field_list = Field.objects.all().order_by('name')
+        table_html = render_to_string('dashboard/field_table.html', {'field_list': field_list}, request=request)
+        return JsonResponse({'success': True, 'table_html': table_html})
+
 def filter_panel(request):
     html = render_to_string('dashboard/filter_panel.html', {
         'sport_categories': Field.SPORT_CATEGORY,

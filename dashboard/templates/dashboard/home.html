@@ -19,15 +19,15 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
       <div class="bg-white rounded-2xl shadow p-6">
         <h2 class="text-gray-500 text-sm">Total Fields</h2>
-        <p class="text-3xl font-semibold text-indigo-600">{{ total_fields }}</p>
+        <p id="total-fields-stat" class="text-3xl font-semibold text-indigo-600">{{ total_fields }}</p>
       </div>
       <div class="bg-white rounded-2xl shadow p-6">
         <h2 class="text-gray-500 text-sm">Average Price</h2>
-        <p class="text-3xl font-semibold text-green-600">{{ avg_price | currency }}</p>
+        <p id="avg-price-stat" class="text-3xl font-semibold text-green-600">{{ avg_price | currency }}</p>
       </div>
       <div class="bg-white rounded-2xl shadow p-6">
         <h2 class="text-gray-500 text-sm">Average Rating</h2>
-        <p class="text-3xl font-semibold text-yellow-500">⭐ {{ avg_rating }}</p>
+        <p id="avg-rating-stat" class="text-3xl font-semibold text-yellow-500">⭐ {{ avg_rating }}</p>
       </div>
     </div>
 
@@ -51,6 +51,19 @@
         </div>
     </div>
 
+    <!-- Delete Modal -->
+    <div id="deleteFieldModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+      <div class="bg-white p-6 rounded-lg w-96 max-h-[80vh] overflow-y-auto">
+        <h2 class="text-lg font-semibold mb-4">Hapus Lapangan</h2>
+        <p id="deleteFieldText" class="mb-4"></p>
+        <div class="flex justify-end gap-2">
+          <button id="confirmDeleteField" class="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700">Ya</button>
+          <button id="cancelDeleteField" class="px-4 py-2 border rounded bg-gray-300 hover:bg-gray-400">Tidak</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Header Table -->
     <div class="flex flex-wrap justify-between items-center mb-4 gap-3">
         <div class="flex items-center gap-3">
             <h2 class="text-xl font-semibold text-gray-800">Daftar Lapangan</h2>
@@ -84,100 +97,241 @@
 </body>
 
 <script>
+// === Elemen Modal & Kontainer ===
 const addFieldModal = document.getElementById('addFieldModal');
 const addFieldContent = document.getElementById('addFieldContent');
+const deleteFieldModal = document.getElementById('deleteFieldModal');
 const filterModal = document.getElementById('filterModal');
 const filterContent = document.getElementById('filterContent');
 const tableContainer = document.getElementById('tableContainer');
 const pageInfo = document.getElementById('pageInfo');
 
-// Open create modal
-document.getElementById('openAddField').addEventListener('click', async () => {
-  addFieldModal.classList.remove('hidden');
-  const res = await fetch("{% url 'add_field_ajax' %}", { headers: {'x-requested-with': 'XMLHttpRequest'} });
-  const data = await res.json();
-  addFieldContent.innerHTML = data.form_html;
-
-  attachAddFieldEvents();  // attach event listener ke form & close button
+// === Event Listener untuk Menutup Modal saat Klik Latar Belakang ===
+addFieldModal.addEventListener('click', (e) => {
+    // Cek apakah yang diklik adalah area latar belakang (modal itu sendiri)
+    // dan bukan konten di dalamnya.
+    if (e.target === addFieldModal) {
+        addFieldModal.classList.add('hidden');
+    }
 });
 
-// Open filter modal
+filterModal.addEventListener('click', (e) => {
+    if (e.target === filterModal) {
+        filterModal.classList.add('hidden');
+    }
+});
+
+deleteFieldModal.addEventListener('click', (e) => {
+    if (e.target === deleteFieldModal) {
+        deleteFieldModal.classList.add('hidden');
+    }
+});
+
+// === Helper Function untuk Mendapatkan State Filter & Paginasi Saat Ini ===
+function getCurrentStateAsFormData() {
+    // Coba cari form filter, jika tidak ada, buat form kosong
+    const filterForm = document.querySelector('#filterForm');
+    const formData = filterForm ? new FormData(filterForm) : new FormData();
+    
+    // Tambahkan parameter 'per_page' & 'page' yang sedang aktif
+    formData.set('per_page', document.getElementById('perPageSelect').value);
+    
+    // Ambil nomor halaman dari link yang memiliki class 'active'
+    const activePageLink = document.querySelector('.page-link.active');
+    const currentPage = activePageLink ? activePageLink.dataset.page : '1';
+    formData.set('page', currentPage);
+
+    return formData;
+}
+
+function formatCurrency(value) {
+    return new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        minimumFractionDigits: 0
+    }).format(value);
+}
+
+// === Fungsi Utama untuk Refresh Tabel (setelah CUD, filter, paginasi) ===
+async function refreshTable(formData) {
+    // Jika tidak ada formData, ambil state saat ini
+    if (!formData) {
+        formData = getCurrentStateAsFormData();
+    }
+    
+    const params = new URLSearchParams(formData).toString();
+    const res = await fetch(`{% url 'dashboard_home' %}?${params}`, {
+        headers: { 'x-requested-with': 'XMLHttpRequest' }
+    });
+    const data = await res.json();
+    
+    // Update bagian-bagian halaman dengan HTML baru dari server
+    tableContainer.innerHTML = data.table_html + data.pagination_html;
+    pageInfo.innerHTML = data.page_info_html;
+
+    document.getElementById('total-fields-stat').textContent = data.total_fields;
+    document.getElementById('avg-price-stat').textContent = formatCurrency(data.avg_price);
+    document.getElementById('avg-rating-stat').textContent = `⭐ ${data.avg_rating}`;
+}
+
+
+// === Event Listener untuk Tombol "Tambahkan Lapangan" ===
+document.getElementById('openAddField').addEventListener('click', async () => {
+    addFieldModal.classList.remove('hidden');
+    const res = await fetch("{% url 'add_field_ajax' %}", { 
+        headers: {'x-requested-with': 'XMLHttpRequest'} 
+    });
+    const data = await res.json();
+    addFieldContent.innerHTML = data.form_html;
+    
+    // Tambahkan judul modal yang sesuai
+    addFieldModal.querySelector('h2').textContent = 'Tambahkan Lapangan Baru';
+    attachFormEvents('add'); // Pasang event listener untuk form create
+});
+
+
+// === Event Listener untuk Tombol "Filter" ===
 document.getElementById('openFilterBtn').addEventListener('click', async () => {
     filterModal.classList.remove('hidden');
     const res = await fetch("{% url 'filter_panel' %}");
     const data = await res.json();
     filterContent.innerHTML = data.html;
 
-    // Pasang listener tombol Close
     document.getElementById('closeFilterBtn').addEventListener('click', () => {
         filterModal.classList.add('hidden');
     });
 
-    // Pasang listener form submit (AJAX filter)
     document.getElementById('filterForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        await applyFilter(new FormData(e.target));
+        // Saat filter diterapkan, selalu kembali ke halaman 1
+        const formData = new FormData(e.target);
+        formData.set('page', '1');
+        await refreshTable(formData);
         filterModal.classList.add('hidden');
     });
 });
 
-// Per-page change
+
+// === Event Listener untuk Dropdown "Per Page" ===
 document.getElementById('perPageSelect').addEventListener('change', async (e) => {
-    const formData = new FormData(document.querySelector('#filterForm') || document.createElement('form'));
+    const formData = getCurrentStateAsFormData();
     formData.set('per_page', e.target.value);
-    await applyFilter(formData);
+    formData.set('page', '1'); // Kembali ke halaman pertama saat per_page diubah
+    await refreshTable(formData);
 });
 
-// Pagination click (delegation)
+
+// === Event Delegation untuk Klik pada Kontainer Utama ===
 document.addEventListener('click', async (e) => {
+    // --- Tombol Paginasi ---
     if (e.target.matches('.page-link')) {
         e.preventDefault();
-        const page = e.target.dataset.page;
+        const formData = getCurrentStateAsFormData();
+        formData.set('page', e.target.dataset.page);
+        await refreshTable(formData);
+    }
+    
+    // --- Tombol Edit ---
+    if (e.target.closest('.editFieldBtn')) {
+        e.preventDefault();
+        const fieldId = e.target.closest('.editFieldBtn').dataset.id;
+        openEditModal(fieldId);
+    }
 
-        // Tambahkan fallback, sama seperti listener 'perPageSelect'
-        const formData = new FormData(document.querySelector('#filterForm') || document.createElement('form'));
-
-        formData.set('page', page);
-        await applyFilter(formData);
+    // --- Tombol Delete ---
+    if (e.target.closest('.deleteFieldBtn')) {
+        e.preventDefault();
+        const button = e.target.closest('.deleteFieldBtn');
+        const fieldId = button.dataset.id;
+        const fieldName = button.dataset.name;
+        openDeleteModal(fieldId, fieldName);
     }
 });
 
-async function applyFilter(formData) {
-    const params = new URLSearchParams(formData).toString();
-    const res = await fetch(`{% url 'dashboard_home' %}?${params}`, {
-    headers: { 'x-requested-with': 'XMLHttpRequest' }
+
+// === Membuka Modal Edit ===
+async function openEditModal(fieldId) {
+    addFieldModal.classList.remove('hidden');
+    // URL harus dinamis, sesuaikan dengan urls.py Anda
+    const res = await fetch(`/dashboard/edit_ajax/${fieldId}/`, {
+        headers: { 'x-requested-with': 'XMLHttpRequest' }
     });
     const data = await res.json();
-    tableContainer.innerHTML = data.table_html + data.pagination_html;
-    pageInfo.innerHTML = data.page_info_html;
+    addFieldContent.innerHTML = data.form_html;
+    
+    // Ubah judul modal
+    addFieldModal.querySelector('h2').textContent = 'Edit Lapangan';
+    attachFormEvents('edit', fieldId); // Pasang event listener untuk form update
 }
 
-// Fungsi attach listener
-function attachAddFieldEvents() {
-  document.getElementById('closeAddField').addEventListener('click', () => {
-    addFieldModal.classList.add('hidden');
-  });
 
-  document.getElementById('addFieldForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const formData = new FormData(e.target);
-    const res = await fetch("{% url 'add_field_ajax' %}", {
-      method: 'POST',
-      headers: {'x-requested-with': 'XMLHttpRequest'},
-      body: formData
+// === Membuka Modal Konfirmasi Hapus ===
+function openDeleteModal(fieldId, fieldName) {
+    // Tampilkan modal dan isi teks konfirmasi
+    deleteFieldModal.classList.remove('hidden');
+    document.getElementById('deleteFieldText').textContent = `Apakah Anda yakin ingin menghapus lapangan "${fieldName}"?`;
+
+    const confirmBtn = document.getElementById('confirmDeleteField');
+    const cancelBtn = document.getElementById('cancelDeleteField');
+
+    // Buat "clone" dari tombol untuk menghapus event listener lama
+    const newConfirmBtn = confirmBtn.cloneNode(true);
+    confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+
+    // Tambahkan event listener baru ke tombol konfirmasi
+    newConfirmBtn.addEventListener('click', async () => {
+        // URL harus dinamis
+        await fetch(`/dashboard/delete_ajax/${fieldId}/`, {
+            method: 'POST',
+            headers: { 'x-requested-with': 'XMLHttpRequest' }
+        });
+
+        deleteFieldModal.classList.add('hidden');
+        await refreshTable(); // Refresh tabel dengan state saat ini
     });
-    const data = await res.json();
 
-    if (data.success) {
-      // Update tabel tanpa reload
-      tableContainer.innerHTML = data.table_html;
-      addFieldModal.classList.add('hidden');
-    } else {
-      // Render ulang form beserta error
-      addFieldContent.innerHTML = data.form_html;
-      attachAddFieldEvents(); // attach lagi event ke form baru
+    cancelBtn.onclick = () => {
+        deleteFieldModal.classList.add('hidden');
+    };
+}
+
+
+// === Fungsi Generic untuk Menangani Form (Add & Edit) ===
+function attachFormEvents(mode, fieldId = null) {
+    const form = addFieldContent.querySelector('form');
+    const closeBtn = addFieldContent.querySelector('.close-modal-btn');
+
+    if (closeBtn) {
+        closeBtn.onclick = () => addFieldModal.classList.add('hidden');
     }
-  });
+
+    if (form) {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            let url = "{% url 'add_field_ajax' %}";
+            if (mode === 'edit') {
+                url = `/dashboard/edit_ajax/${fieldId}/`;
+            }
+            
+            const formData = new FormData(e.target);
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: {'x-requested-with': 'XMLHttpRequest'},
+                body: formData
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                addFieldModal.classList.add('hidden');
+                await refreshTable(); // Refresh tabel
+            } else {
+                // Jika form tidak valid, render ulang form dengan pesan error
+                addFieldContent.innerHTML = data.form_html;
+                attachFormEvents(mode, fieldId); // Pasang lagi event listener ke form baru
+            }
+        });
+    }
 }
 </script>
 
