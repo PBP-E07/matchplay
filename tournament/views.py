@@ -105,7 +105,7 @@ def create_tournament(request):
             description=description or "",
             banner_image=banner_image or None,
             is_private=is_private,
-            # created_by=request.user  TODO apus komen kalau dah ada autentikasi
+            created_by=request.user  
         )
 
         return redirect("tournament:tournament_list")
@@ -113,7 +113,7 @@ def create_tournament(request):
     return render(request, "tournament/create_tournament.html")
 
 
-# @login_required  TODO apus komen kalau dah ada autentikasi
+@login_required 
 def join_tournament(request, pk):
     tournament = get_object_or_404(Tournament, pk=pk)
 
@@ -131,7 +131,7 @@ def join_tournament(request, pk):
             name=team_name,
             logo_url=logo_url,
             tournament=tournament,
-            # created_by=request.user TODO apus komen kalau dah ada autentikasi
+            created_by=request.user 
         )
 
         tournament.total_teams += 1
@@ -141,7 +141,7 @@ def join_tournament(request, pk):
     
     return render(request, "tournament/join_tournament.html", {"tournament": tournament})
 
-# @login_required TODO apus komen kalau dah ada autentikasi
+@login_required 
 def edit_tournament(request, pk):
     tournament = get_object_or_404(Tournament, pk=pk)
 
