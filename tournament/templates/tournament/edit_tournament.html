@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="max-w-md mx-auto bg-white p-6 rounded-xl shadow mt-10">
+  <h1 class="text-2xl font-bold mb-6 text-center">Edit Turnamen</h1>
+
+  <form method="POST" class="space-y-4">
+    {% csrf_token %}
+    <div>
+      <label class="block font-medium mb-1">Nama Turnamen</label>
+      <input type="text" name="name" value="{{ tournament.name }}" required class="w-full border rounded p-2">
+    </div>
+
+    <div>
+      <label class="block font-medium mb-1">Jenis Olahraga</label>
+      <input type="text" name="sport_type" value="{{ tournament.sport_type }}" required class="w-full border rounded p-2">
+    </div>
+
+    <div>
+      <label class="block font-medium mb-1">Lokasi</label>
+      <input type="text" name="location" value="{{ tournament.location }}" required class="w-full border rounded p-2">
+    </div>
+
+    <div>
+      <label class="block font-medium mb-1">Tanggal Mulai</label>
+      <input type="date" name="start_date" value="{{ tournament.start_date }}" class="w-full border rounded p-2">
+    </div>
+
+    <div>
+      <label class="block font-medium mb-1">Tanggal Selesai</label>
+      <input type="date" name="end_date" value="{{ tournament.end_date }}" class="w-full border rounded p-2">
+    </div>
+
+    <div>
+      <label class="block font-medium mb-1">Hadiah (Prize Pool)</label>
+      <input type="text" name="prize_pool" value="{{ tournament.prize_pool }}" class="w-full border rounded p-2">
+    </div>
+
+    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded">
+      Simpan Perubahan
+    </button>
+  </form>
+
+  <!-- Tombol Hapus -->
+  <form method="POST" action="{% url 'tournament:delete_tournament' tournament.id %}" class="mt-4">
+    {% csrf_token %}
+    <button type="submit"
+            class="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded transition">
+      Hapus Turnamen
+    </button>
+  </form>
+
+  <a href="{% url 'tournament:tournament_detail' tournament.id %}"
+     class="block text-center text-gray-500 mt-4 hover:underline">← Kembali ke Detail</a>
+</div>
+{% endblock %}
