@@ -93,15 +93,6 @@ class Match(models.Model):
             start_time=self.start_time
         ).exists()
 
-    def is_venue_match_conflict(self):
-        """Checks if the venue is already taken by another match for the same time."""
-        # Check for any *other* match (excluding self)
-        return Match.objects.filter(
-            field=self.field,
-            match_date=self.match_date,
-            start_time=self.start_time
-        ).exclude(pk=self.pk).exists()
-
     def clean(self):
         """Custom validation for the model."""
         super().clean()
@@ -112,87 +103,32 @@ class Match(models.Model):
         # 2. Check match date is not in the past
         if self.match_date and self.match_date < timezone.now().date():
              raise ValidationError("Cannot create a match for a past date.")
-        # --- MODIFIED CHECK ---
-        # Check that self.start_time is not None before comparing
-        elif self.match_date == timezone.now().date() and self.start_time and self.start_time <= timezone.now().time():
+        elif self.match_date == timezone.now().date() and self.start_time <= timezone.now().time():
              raise ValidationError("Cannot create a match for a past time.")
 
         # 3. Check if the venue is already booked (important!)
-        # This block will only run if all self.x values are not None
         if self.field and self.match_date and self.start_time:
             if self.is_venue_booked():
-                raise ValidationError(f"The selected time slot ({self.start_time.strftime('%H:%M')}) for {self.field.name} on {self.match_date} is already booked directly.")
-            
-            # 4. NEW: Check for match conflicts
-            if self.is_venue_match_conflict():
-                 raise ValidationError(f"The selected time slot ({self.start_time.strftime('%H:%M')}) for {self.field.name} on {self.match_date} is already taken by another match.")
+                raise ValidationError(f"The selected time slot ({self.start_time.strftime('%H:%M')}) for {self.field.name} on {self.match_date} is already booked.")
 
-        # 5. Check max_players
-        if self.max_players is not None and self.max_players < 2:
+        # 4. Check max_players is at least 2 (or 1 if organizer counts?)
+        if self.max_players < 2:
              raise ValidationError("Maximum players must be at least 2.")
-        elif self.max_players is None:
-             raise ValidationError("Maximum players must be set.")
-
-    @staticmethod
-    def get_all_slots_status(field_id, date):
-        """
-        Checks both Bookings and Matches for the fixed time slots.
-        Returns a list of all time slots (10:00-14:00) and their status.
-        """
-        all_slots = [
-            (datetime.time(10, 0), datetime.time(11, 0)),
-            (datetime.time(11, 0), datetime.time(12, 0)),
-            (datetime.time(12, 0), datetime.time(13, 0)),
-            (datetime.time(13, 0), datetime.time(14, 0)),
-        ]
-        
-        if not field_id or not date:
-             # Return all as 'unavailable' if key info is missing
-             return [
-                {
-                    'start': start.strftime("%H:%M"),
-                    'end': end.strftime("%H:%M"),
-                    'status': 'unavailable',
-                    'message': 'Invalid field or date'
-                } for start, end in all_slots
-            ]
-
-        # 1. Get booked slots from 'bookings' app
-        booked_start_times = set(Booking.objects.filter(
-            field_id=field_id,
-            booking_date=date
-        ).values_list('start_time', flat=True))
-
-        # 2. Get taken slots from 'matches' app
-        match_start_times = set(Match.objects.filter(
-            field_id=field_id,
-            match_date=date,
-            status__in=['Pending', 'Confirmed'] # Only check for active matches
-        ).values_list('start_time', flat=True))
-
-        slots_with_status = []
-        for start, end in all_slots:
-            status = 'available'
-            message = 'Available'
-            if start in booked_start_times:
-                status = 'booked'
-                message = 'Booked'
-            elif start in match_start_times:
-                status = 'match_created'
-                message = 'Match Created'
-
-            slots_with_status.append({
-                'start': start.strftime("%H:%M"),
-                'end': end.strftime("%H:%M"),
-                'status': status # 'available', 'booked', or 'match_created'
-            })
-        return slots_with_status
 
 
     class Meta:
         ordering = ['match_date', 'start_time']
         verbose_name = "Match"
         verbose_name_plural = "Matches"
+
+    @property
+    def progress_percentage(self):
+        """Calculates the fill percentage for the progress bar."""
+        if not self.max_players or self.max_players == 0:
+            return 0
+        # Calculate percentage and ensure it doesn't exceed 100
+        percentage = (self.current_player_count / self.max_players) * 100
+        return min(percentage, 100)
 
 
 class MatchPlayer(models.Model):

@@ -55,9 +55,7 @@
             <span class="text-orange-600 font-semibold">{{ match.spots_left }} spot{{ match.spots_left|pluralize }} left</span>
         </div>
         <div class="w-full bg-gray-200 rounded-full h-2">
-            {% with progress_percentage=match.current_player_count|div:match.max_players|mul:100 %}
-            <div class="bg-green-600 h-2 rounded-full" style="width: {{ progress_percentage }}%"></div>
-            {% endwith %}
+            <div class="bg-green-600 h-2 rounded-full" style="width: {{ match.progress_percentage }}%"></div>
         </div>
     </div>
 
