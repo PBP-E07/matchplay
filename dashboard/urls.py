@@ -1,6 +1,8 @@
 from django.urls import path
 from dashboard import views
 
+app_name = 'dashboard'
+
 urlpatterns = [
     path('', views.dashboard_home, name='dashboard_home'),
     path('filter-panel/', views.filter_panel, name='filter_panel'),

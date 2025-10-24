@@ -28,10 +28,12 @@ def show_login(request):
 
         if form.is_valid():
             user = form.get_user()
-
             login(request, user)
             
-            response = HttpResponseRedirect(reverse("main:show_main"))
+            if user.is_staff or user.is_superuser:
+                response = HttpResponseRedirect(reverse("dashboard:dashboard_home"))
+            else:
+                response = HttpResponseRedirect(reverse("main:show_main"))
 
             return response
     

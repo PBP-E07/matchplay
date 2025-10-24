@@ -1,11 +1,15 @@
 from django.core.paginator import Paginator
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.template.loader import render_to_string
 from django.views.decorators.csrf import csrf_exempt
+
 from fields.models import Field
 from fields.forms import FieldForm
 
+from authentication.decorators import admin_required
+
+@admin_required
 def dashboard_home(request):
     field_list = Field.objects.all().order_by('name')
 
@@ -71,6 +75,7 @@ def dashboard_home(request):
     
     return render(request, 'dashboard/home.html', context)
 
+@admin_required
 def add_field_ajax(request):
     if request.method == 'POST':
         form = FieldForm(request.POST)
@@ -89,6 +94,7 @@ def add_field_ajax(request):
         form_html = render_to_string('dashboard/add_field_form.html', {'form': form}, request=request)
         return JsonResponse({'form_html': form_html})
 
+@admin_required
 def edit_field_ajax(request, pk):
     field_obj = Field.objects.get(pk=pk)
     if request.method == 'POST':
@@ -107,6 +113,7 @@ def edit_field_ajax(request, pk):
         return JsonResponse({'form_html': form_html})
 
 @csrf_exempt
+@admin_required
 def delete_field_ajax(request, pk):
     if request.method == 'POST':
         field_obj = Field.objects.get(pk=pk)
@@ -115,6 +122,7 @@ def delete_field_ajax(request, pk):
         table_html = render_to_string('dashboard/field_table.html', {'field_list': field_list}, request=request)
         return JsonResponse({'success': True, 'table_html': table_html})
 
+@admin_required
 def filter_panel(request):
     html = render_to_string('dashboard/filter_panel.html', {
         'sport_categories': Field.SPORT_CATEGORY,
