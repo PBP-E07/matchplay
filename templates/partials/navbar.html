@@ -20,7 +20,7 @@
 
             <div class="hidden md:flex md:items-center md:space-x-6">
                 {% if user.is_authenticated %}
-                    <a href="#" class="flex items-center space-x-2 text-gray-600 hover:text-gray-900">
+                    <a href="{% url 'bookings:my_bookings_list' %}" class="flex items-center space-x-2 text-gray-600 hover:text-gray-900">
                         <i class="fa-solid fa-calendar-days text-2xl"></i>
                         <span class="font-medium">My Booking</span>
                     </a>
@@ -39,12 +39,7 @@
             </div>
 
             <div class="md:hidden flex items-center">
-                <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-lime-500" aria-controls="mobile-menu" aria-expanded="false">
-                    <span class="sr-only">Open main menu</span>
-                    <i id="menu-open-icon" class="fa-solid fa-bars text-2xl block"></i>
-                    <i id="menu-close-icon" class="fa-solid fa-times text-2xl hidden"></i>
-                </button>
-            </div>
+                </div>
         </div>
     </div>
 </nav>

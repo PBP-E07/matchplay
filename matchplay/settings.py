@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'fields',
     'equipment',
     'authentication',
+    'bookings',
 ]
 
 MIDDLEWARE = [

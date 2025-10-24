@@ -106,11 +106,9 @@
 
     <div
         id="fields-container"
-        class="w-full max-w-4xl mx-auto grid grid-cols-3 gap-6 mt-8"
-    >
-        {% for field in fields %} 
-            {% include 'partials/field_card.html' with field=field %}
-        {% endfor %}
+        class="w-full max-w-4xl mx-auto grid grid-cols-1 gap-6 mt-8" 
+        >
+        {% include 'partials/field_list_content.html' with page_obj=fields %}
     </div>
 
     <div id="matches-container" class="hidden w-full max-w-4xl mx-auto mt-6">

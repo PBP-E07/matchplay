@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 max-w-4xl">
+    <h1 class="text-3xl font-bold mb-6 text-gray-800">My Bookings</h1>
+
+    {% if messages %}
+        <div class="mb-6 space-y-2">
+            {% for message in messages %}
+                <div class="p-4 rounded-md text-sm {% if message.tags == 'success' %} bg-green-100 text-green-800 border border-green-200 {% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <section class="mb-12">
+        <h2 class="text-2xl font-semibold mb-4 text-gray-700">Upcoming Bookings</h2>
+        {% if upcoming_bookings %}
+            <div class="space-y-4">
+                {% for booking in upcoming_bookings %}
+                    <div class="bg-white p-5 rounded-lg shadow-md flex justify-between items-center">
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-900">{{ booking.field.name }}</h3>
+                            <p class="text-gray-600">{{ booking.field.location }}</p>
+                            <p class="text-gray-800 font-medium mt-2">
+                                <i class="fa-solid fa-calendar-day mr-2 text-lime-500"></i>
+                                {{ booking.booking_date|date:"l, d F Y" }}
+                            </p>
+                            <p class="text-gray-800 font-medium">
+                                <i class="fa-solid fa-clock mr-2 text-lime-500"></i>
+                                {{ booking.start_time|time:"H:i" }} - {{ booking.end_time|time:"H:i" }}
+                            </p>
+                        </div>
+                        <a href="{% url 'bookings:booking_detail' booking.id %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-lime-500 hover:bg-lime-600">
+                            View Details
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="bg-white p-5 rounded-lg shadow-md text-center text-gray-500">
+                You have no upcoming bookings. <a href="{% url 'main:show_main' %}" class="text-lime-600 hover:underline font-medium">Book a venue now!</a>
+            </div>
+        {% endif %}
+    </section>
+
+    <section>
+        <h2 class="text-2xl font-semibold mb-4 text-gray-700">Past Bookings</h2>
+        {% if past_bookings %}
+            <div class="space-y-4">
+                {% for booking in past_bookings %}
+                    <div class="bg-white p-5 rounded-lg shadow-md flex justify-between items-center opacity-70">
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-500">{{ booking.field.name }}</h3>
+                            <p class="text-gray-500">{{ booking.field.location }}</p>
+                            <p class="text-gray-600 font-medium mt-2">
+                                <i class="fa-solid fa-calendar-check mr-2 text-gray-400"></i>
+                                {{ booking.booking_date|date:"l, d F Y" }}
+                            </p>
+                            <p class="text-gray-600 font-medium">
+                                <i class="fa-solid fa-clock mr-2 text-gray-400"></i>
+                                {{ booking.start_time|time:"H:i" }} - {{ booking.end_time|time:"H:i" }} (Completed)
+                            </p>
+                        </div>
+                        <a href="{% url 'bookings:booking_detail' booking.id %}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                            View Details
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="bg-white p-5 rounded-lg shadow-md text-center text-gray-500">
+                You have no past bookings.
+            </div>
+        {% endif %}
+    </section>
+
+</div>
+{% endblock %}
