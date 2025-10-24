@@ -1,14 +1,16 @@
 from django.db import models
 
+from django.db import models
+
 class Equipment(models.Model):
     name = models.CharField(max_length=100)
-    description = models.TextField(blank=True)
-    quantity = models.PositiveIntegerField(default=0)
-    price_per_hour = models.DecimalField(max_digits=8, decimal_places=2)
-    available = models.BooleanField(default=True)
+    price = models.IntegerField()
+    stock = models.IntegerField()
+    image = models.ImageField(upload_to='equipment_images/', null=True, blank=True)
     
     def __str__(self):
         return self.name
+
 
 
 class Rental(models.Model):
