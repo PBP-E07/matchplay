@@ -1,0 +1,295 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="mb-8">
+    <h1 class="text-2xl font-bold text-gray-900">Blog</h1>
+    <p class="text-sm text-gray-600 mt-1" id="blog-count-display">
+        Menampilkan <strong class="text-gray-900">{{ blog_count }} Artikel</strong>
+    </p>
+</div>
+
+<div id="blog-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3" style="gap: 64px !important; max-width: calc(316px * 3 + 8px * 2); margin: 0 auto;">
+    {% for blog in blogs %}
+        {% include 'main/_blog_card.html' with blog=blog %}
+    {% empty %}
+        <div id="no-blogs-message" class="col-span-1 md:col-span-2 lg:col-span-3 text-center text-gray-500 p-10 bg-white rounded-lg shadow">
+            <img src="{% static 'image/no-news.png' %}" alt="No News" class="mx-auto h-32 w-32 mb-4 opacity-50">
+            <p class="text-xl">Belum ada artikel.</p>
+        </div>
+    {% endfor %}
+</div>
+
+<!-- Modal Konfirmasi Delete -->
+<div id="delete-modal-backdrop" class="hidden fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity duration-300"></div>
+<div id="delete-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl max-w-md w-full transform transition-all duration-300 scale-95 opacity-0">
+        <div class="p-6">
+            <div class="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full mb-4">
+                <i class="fas fa-trash text-red-600 text-xl"></i>
+            </div>
+            <h3 class="text-lg font-bold text-gray-900 text-center mb-2">Hapus Artikel?</h3>
+            <p class="text-sm text-gray-600 text-center mb-6">Artikel yang sudah dihapus tidak dapat dikembalikan lagi.</p>
+            
+            <div class="flex gap-3">
+                <button id="cancel-delete-btn" class="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg font-medium transition-colors">
+                    Batal
+                </button>
+                <button id="confirm-delete-btn" class="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors">
+                    Hapus
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<button id="create-blog-btn" class="fixed bottom-6 right-6 bg-[#60AC00] hover:bg-[#519000] text-white p-4 rounded-full shadow-lg z-30 transition duration-300 ease-in-out transform hover:scale-110">
+    <i class="fas fa-plus fa-lg"></i>
+</button>
+{% endblock content %}
+
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    // --- Elemen Global ---
+    const modalBackdrop = document.getElementById('modal-backdrop');
+    const modal = document.getElementById('blog-modal');
+    const modalContent = document.getElementById('modal-content');
+    const createBlogBtn = document.getElementById('create-blog-btn');
+    const blogGrid = document.getElementById('blog-grid');
+    const blogCountDisplay = document.getElementById('blog-count-display');
+    
+    // Delete Modal Elements
+    const deleteModalBackdrop = document.getElementById('delete-modal-backdrop');
+    const deleteModal = document.getElementById('delete-modal');
+    const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
+    const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+    let pendingDeletePk = null;
+    
+    if (!createBlogBtn) {
+        console.error('Tombol Create (id="create-blog-btn") tidak ditemukan!');
+        return;
+    }
+    
+    // --- URLS ---
+    const createFormUrl = "{% url 'main:get-blog-form' %}";
+
+    // --- Helper Functions ---
+    function showModal() {
+        modalBackdrop.classList.remove('hidden');
+        modalBackdrop.classList.add('opacity-100');
+        modal.classList.remove('hidden');
+        void modal.offsetWidth; 
+        modal.classList.remove('scale-95', 'opacity-0');
+        modal.classList.add('scale-100', 'opacity-100');
+    }
+
+    function hideModal() {
+        modal.classList.add('scale-95', 'opacity-0');
+        modal.classList.remove('scale-100', 'opacity-100');
+        modalBackdrop.classList.add('opacity-0');
+        
+        setTimeout(() => {
+            modal.classList.add('hidden');
+            modalBackdrop.classList.add('hidden');
+            modalContent.innerHTML = '';
+        }, 300);
+    }
+
+    function showDeleteModal() {
+        deleteModalBackdrop.classList.remove('hidden');
+        deleteModal.classList.remove('hidden');
+        setTimeout(() => {
+            deleteModalBackdrop.classList.add('opacity-100');
+            const modalContent = deleteModal.querySelector('div');
+            modalContent.classList.remove('scale-95', 'opacity-0');
+            modalContent.classList.add('scale-100', 'opacity-100');
+        }, 10);
+    }
+
+    function hideDeleteModal() {
+        const modalContent = deleteModal.querySelector('div');
+        modalContent.classList.add('scale-95', 'opacity-0');
+        modalContent.classList.remove('scale-100', 'opacity-100');
+        deleteModalBackdrop.classList.remove('opacity-100');
+        
+        setTimeout(() => {
+            deleteModal.classList.add('hidden');
+            deleteModalBackdrop.classList.add('hidden');
+            pendingDeletePk = null;
+        }, 300);
+    }
+
+    function getCsrfTokenFromCookie() {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, 10) === ('csrftoken' + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(10));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function updateBlogCount() {
+        const count = document.querySelectorAll('.blog-card').length;
+        blogCountDisplay.innerHTML = `Menampilkan <strong class="text-gray-900">${count} Artikel</strong>`;
+        
+        const noBlogsMessage = document.getElementById('no-blogs-message');
+        if (count > 0 && noBlogsMessage) {
+            noBlogsMessage.style.display = 'none';
+        } else if (count === 0) {
+            if (!noBlogsMessage) {
+                blogGrid.innerHTML = `<div id="no-blogs-message" class="col-span-1 md:col-span-2 lg:col-span-3 text-center text-gray-500 p-10 bg-white rounded-lg shadow"><p class="text-xl">Belum ada artikel.</p><p>Mulai buat satu!</p></div>`;
+            } else {
+                noBlogsMessage.style.display = 'block';
+            }
+        }
+    }
+
+    // --- Event Listener 1: Tombol "Create Blog" (+) ---
+    createBlogBtn.addEventListener('click', () => {
+        fetch(createFormUrl)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                modalContent.innerHTML = data.html_form;
+                showModal();
+            })
+            .catch(error => {
+                console.error('Error fetching form:', error);
+                alert('Gagal memuat form. Cek console (F12) untuk detail.');
+            });
+    });
+
+    // --- Event Listener 2: Tombol "Edit" & "Delete" (Event Delegation) ---
+    blogGrid.addEventListener('click', (e) => {
+        const editBtn = e.target.closest('.edit-btn');
+        const deleteBtn = e.target.closest('.delete-btn');
+
+        if (editBtn) {
+            const pk = editBtn.dataset.pk;
+            const editFormUrl = `/blog/${pk}/form/`;
+            
+            fetch(editFormUrl)
+                .then(response => response.json())
+                .then(data => {
+                    modalContent.innerHTML = data.html_form;
+                    showModal();
+                });
+        }
+
+        if (deleteBtn) {
+            pendingDeletePk = deleteBtn.dataset.pk;
+            showDeleteModal();
+        }
+    });
+
+    // --- Event Listener: Cancel Delete ---
+    cancelDeleteBtn.addEventListener('click', hideDeleteModal);
+    deleteModalBackdrop.addEventListener('click', hideDeleteModal);
+
+    // --- Event Listener: Confirm Delete ---
+    confirmDeleteBtn.addEventListener('click', () => {
+        if (!pendingDeletePk) return;
+        
+        const deleteUrl = `/blog/${pendingDeletePk}/delete/`;
+        
+        fetch(deleteUrl, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCsrfTokenFromCookie(),
+                'Content-Type': 'application/json'
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const cardToRemove = document.getElementById(`blog-card-${pendingDeletePk}`);
+                cardToRemove.classList.add('opacity-0', 'scale-95');
+                setTimeout(() => {
+                    cardToRemove.remove();
+                    updateBlogCount();
+                }, 300);
+                hideDeleteModal();
+            } else {
+                alert('Gagal menghapus blog.');
+                hideDeleteModal();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Terjadi kesalahan saat menghapus.');
+            hideDeleteModal();
+        });
+    });
+
+    // --- Event Listener 3: Submit Form di Modal (Create / Update) ---
+    $(document).on('submit', '#ajax-blog-form', function(e) {
+        e.preventDefault();
+        
+        const form = $(this);
+        const url = form.attr('data-url');
+        const formData = new FormData(this);
+
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            headers: {
+                'X-CSRFToken': getCsrfTokenFromCookie()
+            },
+            success: function(data) {
+                if (data.success) {
+                    if (data.new_card_html) {
+                        const noBlogsMessage = document.getElementById('no-blogs-message');
+                        if (noBlogsMessage) noBlogsMessage.style.display = 'none';
+                        
+                        const newCard = $(data.new_card_html).addClass('opacity-0 scale-95');
+                        $('#blog-grid').prepend(newCard);
+                        void newCard[0].offsetWidth; 
+                        newCard.removeClass('opacity-0 scale-95');
+
+                    } else if (data.updated_card_html) {
+                        const oldCard = $(`#blog-card-${data.pk}`);
+                        const updatedCard = $(data.updated_card_html);
+                        
+                        oldCard.addClass('opacity-0 scale-95');
+                        setTimeout(() => {
+                            oldCard.replaceWith(updatedCard);
+                            updatedCard.addClass('opacity-0 scale-95');
+                            void updatedCard[0].offsetWidth;
+                            updatedCard.removeClass('opacity-0 scale-95');
+                        }, 300);
+                    }
+                    hideModal();
+                    updateBlogCount();
+                } else {
+                    $('#modal-content').html(data.html_form_with_errors);
+                }
+            },
+            error: function() {
+                alert('Terjadi kesalahan pada server. Silakan coba lagi.');
+            }
+        });
+    });
+
+    // --- Event Listener 4: Tutup Modal ---
+    $(document).on('click', '#modal-close-btn, #modal-close-btn-footer, #modal-backdrop', function() {
+        hideModal();
+    });
+});
+</script>
+{% endblock scripts %}
