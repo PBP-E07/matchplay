@@ -4,6 +4,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import user_passes_test
 from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
+
 
 def is_admin(user):
     return user.is_staff  # bisa juga ganti ke user.is_superuser
@@ -11,10 +13,7 @@ def is_admin(user):
 @login_required
 def equipment_list(request):
     equipments = Equipment.objects.all()
-    return render(request, 'equipment/list.html', {
-        'equipments': equipments,
-        'is_admin': request.user.is_staff,  # kirim ke template
-    })
+    return render(request, 'equipment/equipment_list.html', {'equipments': equipments})
 
 def equipment_detail(request, id):
     equipment = get_object_or_404(Equipment, id=id)
