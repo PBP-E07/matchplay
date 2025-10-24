@@ -4,6 +4,45 @@
 
 {% block content %}
 <main class="min-h-dvh w-full">
-    <img class="w-full" src="{% static 'images/field.png' %}" alt="Banner">
+    <div class="relative h-[75dvh] overflow-hidden">
+        <img class="absolute inset-0 w-full h-full object-cover z-10" src="{% static 'images/field.jpg' %}" alt="Banner">
+        <img class="opacity-20 absolute inset-0 w-full h-full object-cover z-20" src="{% static 'images/overlay.svg' %}" alt="Banner Overlay">
+        
+        <div class="absolute inset-0 z-30 flex flex-col gap-8 items-center justify-center text-white mx-auto max-w-4xl">
+            <div class="flex flex-col gap-6 items-center justify-center">
+                <p class="text-5xl font-bold">
+                    Find Your Venues, Match, Play.
+                </p>
+                
+                <p class="text-xl">
+                    Cari Lawan, Pesan Lapangan, Langsung Main.
+                </p>
+            </div>
+
+            <div class="w-full bg-white rounded-2xl text-black flex w-full p-4 gap-4">
+                <div class="relative w-full">
+                    <img class="absolute left-3 inset-y-0 my-auto h-5 w-5 z-20" src="{% static 'images/search.svg' %}">
+
+                    <input class="duration-200 w-full h-12 bg-[#f3f3f5] rounded-xl pl-10 pr-4" placeholder="Search matches, venues, sports">
+                </div>
+
+                <button class="rounded-xl px-6 border flex gap-2 items-center justify-center">
+                    <img src="{% static 'images/funnel.svg' %}">
+
+                    Filters
+                </button>
+                    
+                <button class="rounded-xl px-6 bg-[#98DE5B] text-white flex items-center justify-center">
+                    Search
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="w-full max-w-4xl mx-auto grid grid-cols-3 gap-6 mt-6">
+        {% for field in fields %}
+            {% include 'partials/field_card.html' with field=field %}
+        {% endfor %}
+    </div>
 </main>
 {% endblock content %}
