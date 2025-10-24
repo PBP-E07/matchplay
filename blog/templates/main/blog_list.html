@@ -15,7 +15,6 @@
         {% include 'main/_blog_card.html' with blog=blog %}
     {% empty %}
         <div id="no-blogs-message" class="col-span-1 md:col-span-2 lg:col-span-3 text-center text-gray-500 p-10 bg-white rounded-lg shadow">
-            {% comment %} Ganti 'image/no-news.png' dengan path yang benar jika beda {% endcomment %}
             <img src="{% static 'image/no-news.png' %}" alt="No News" class="mx-auto h-32 w-32 mb-4 opacity-50">
             <p class="text-xl">Belum ada artikel.</p>
         </div>

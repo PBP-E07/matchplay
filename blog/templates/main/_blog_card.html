@@ -3,10 +3,12 @@ File: main/templates/main/_blog_card.html
 (Versi baru yang di-styling kayak target lo)
 {% endcomment %}
 
-<div class="blog-card bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 ease-in-out transform hover:shadow-xl hover:-translate-y-1" id="blog-card-{{ blog.pk }}">
+<div class="blog-card bg-white rounded-3xl shadow-[0px_4px_2px_0px_#00000040] overflow-hidden transition-all duration-300 ease-in-out transform hover:shadow-[0px_8px_4px_0px_#00000040] hover:-translate-y-1" id="blog-card-{{ blog.pk }}">
+    
     <a href="{{ blog.get_absolute_url }}">
     
     <img src="{{ blog.thumbnail|default:'https://via.placeholder.com/400x250?text=No+Image' }}" alt="{{ blog.title }}" class="w-full h-48 object-cover">
+    </a>
 
     
     <div class="p-5">
@@ -15,25 +17,24 @@ File: main/templates/main/_blog_card.html
             {{ blog.title }}
         </h3>
         
-        <p class="text-sm text-gray-600 mb-4 h-16 overflow-hidden">
+        <p class="text-sm text-[#A9A9A9] mb-4 h-16 overflow-hidden">
             {{ blog.summary }}
         </p>
         
         <div class="flex justify-between items-center pt-4 border-gray-100">
             
             <div class="flex space-x-3">
-                <button class="edit-btn text-sm text-gray-500 hover:text-blue-600 transition-colors" data-pk="{{ blog.pk }}">
+                <button class="edit-btn text-sm text-[#3B3A3A] hover:text-blue-600 transition-colors" data-pk="{{ blog.pk }}">
                     <i class="fas fa-edit mr-1"></i>Edit
                 </button>
-                <button class="delete-btn text-sm text-gray-500 hover:text-red-600 transition-colors" data-pk="{{ blog.pk }}">
+                <button class="delete-btn text-sm text-[#3B3A3A] hover:text-red-600 transition-colors" data-pk="{{ blog.pk }}">
                     <i class="fas fa-trash mr-1"></i>Delete
                 </button>
             </div>
             
-            <a href="{{ blog.get_absolute_url }}" class="text-sm text-gray-700 font-medium hover:text-black">
+            <a href="{{ blog.get_absolute_url }}" class="text-sm text-[#3B3A3A] font-medium underline hover:text-black">
                 Read More
             </a>
         </div>
     </div>
-</a>
 </div>
