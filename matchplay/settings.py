@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'equipment',
     'authentication',
     'bookings',
+    'tournament'
 ]
 
 MIDDLEWARE = [
