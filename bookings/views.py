@@ -31,8 +31,8 @@ def book_field(request, field_id):
                     end_time=end_time
                 )
 
-                messages.success(request, f"Successfully booked { field.name } on { booking_date.strftime("%d %b %Y") } from { start_time_str } to { end_time_str }.")
-                
+                messages.success(request, "Successfully booked " + field.name + " on " + booking_date.strftime("%d %b %Y") + " from " + start_time_str + " to " + end_time_str + ".")
+
                 return redirect("bookings:my_bookings_list")
 
             except ValueError:
