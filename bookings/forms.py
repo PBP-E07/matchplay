@@ -1,67 +1,32 @@
 from django import forms
-from bookings.models import Booking
-import datetime
 from django.utils import timezone
+import datetime
+
+# bookable times
+SLOT_CHOICES = (
+    ("10:00-11:00", "10:00-11:00"),
+    ("11:00-12:00", "11:00-12:00"),
+    ("12:00-13:00", "12:00-13:00"),
+    ("13:00-14:00", "13:00-14:00"),
+)
 
 class BookingForm(forms.Form):
+    # fields for the form
     booking_date = forms.DateField(
-        widget=forms.DateInput(attrs={ "type": "date" }),
-        label="Select Date"
+        widget=forms.DateInput(attrs={
+            "type": "date",
+            "class": "form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50",
+            "id": "id_booking_date",
+            "min": timezone.now().date().strftime("%Y-%m-%d"),
+            "max": (timezone.now().date() + datetime.timedelta(days=30)).strftime("%Y-%m-%d"),
+        }),
+        label="Select Date",
+        initial=timezone.now().date
     )
 
     time_slot = forms.ChoiceField(
-        choices=[],
+        choices=SLOT_CHOICES,
         widget=forms.RadioSelect,
-        label="Select Time Slot"
+        label="Select Available Time Slot",
+        required=True
     )
-
-    def __init__(self, *args, **kwargs):
-        self.field = kwargs.pop('field', None)
-        super().__init__(*args, **kwargs)
-
-        today = timezone.now().date()
-        max_date = today + datetime.timedelta(days=30)
-        self.fields['booking_date'].widget.attrs.update({
-            'min': today.strftime('%Y-%m-%d'),
-            'max': max_date.strftime('%Y-%m-%d')
-        })
-
-        initial_date_str = self.data.get('booking_date') if self.data else None
-        initial_date = None
-        if initial_date_str:
-            try:
-                initial_date = datetime.datetime.strptime(initial_date_str, '%Y-%m-%d').date()
-            except ValueError:
-                initial_date = today
-        else:
-           initial_date = today
-
-        if self.field and initial_date:
-            available_slots = Booking.get_available_slots(self.field.id, initial_date)
-            self.fields['time_slot'].choices = [
-                (f"{slot['start']}-{slot['end']}", f"{slot['start']} - {slot['end']}")
-                for slot in available_slots
-            ]
-
-    def clean_booking_date(self):
-        date = self.cleaned_data.get('booking_date')
-        if date < timezone.now().date():
-            raise forms.ValidationError("You cannot book a date in the past.")
-        if date > timezone.now().date() + datetime.timedelta(days=30):
-             raise forms.ValidationError("You can only book up to one month in advance.")
-        return date
-
-    def clean_time_slot(self):
-        time_slot_str = self.cleaned_data.get('time_slot')
-        booking_date = self.cleaned_data.get('booking_date') # Use cleaned date
-
-        if not time_slot_str or not booking_date:
-            return time_slot_str
-
-        start_time_str, end_time_str = time_slot_str.split('-')
-        start_time = datetime.datetime.strptime(start_time_str, '%H:%M').time()
-
-        if Booking.objects.filter(field=self.field, booking_date=booking_date, start_time=start_time).exists():
-            raise forms.ValidationError("This time slot has just been booked. Please choose another one.")
-
-        return time_slot_str
