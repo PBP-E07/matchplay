@@ -3,6 +3,8 @@ from django.contrib.auth.decorators import login_required
 from .models import Tournament, Team, Match
 from django.http import JsonResponse
 from django.utils import timezone
+from django.contrib import messages
+from datetime import datetime
 
 
 # Create your views here.
@@ -36,13 +38,15 @@ def tournament_matches(request, pk):
 
 def get_tournaments_json(request):
     filter_type = request.GET.get("status")  
-    tournaments = Tournament.objects.all().order_by("-start_date")
 
-    if filter_type == "private":
-        if request.user.is_authenticated:
-            tournaments = tournaments.filter(is_private=True, created_by=request.user)
-        else:
-            tournaments = Tournament.objects.none()
+    tournaments = Tournament.objects.filter(is_private=False).order_by("-start_date")
+
+    if request.user.is_authenticated:
+        user_private = Tournament.objects.filter(is_private=True, created_by=request.user)
+        tournaments = (tournaments | user_private).distinct()
+
+    if filter_type == "private" and request.user.is_authenticated:
+        tournaments = tournaments.filter(is_private=True, created_by=request.user)
     elif filter_type == "public":
         tournaments = tournaments.filter(is_private=False)
 
@@ -95,6 +99,33 @@ def create_tournament(request):
         banner_image = request.POST.get("banner_image")
         is_private = request.POST.get("is_private") == "on"
 
+        if Tournament.objects.filter(name__iexact=name).exists():
+            messages.error(request, "Nama turnamen sudah digunakan. Gunakan nama lain.")
+            return render(request, "tournament/create_tournament.html")
+        
+        try:
+            if start_date:
+                start_date_obj = datetime.strptime(start_date, "%Y-%m-%d").date()
+            else:
+                start_date_obj = timezone.now().date()
+
+            if end_date:
+                end_date_obj = datetime.strptime(end_date, "%Y-%m-%d").date()
+                if start_date_obj > end_date_obj:
+                    messages.error(request, "Tanggal mulai tidak boleh setelah tanggal selesai.")
+                    return render(request, "tournament/create_tournament.html")
+            else:
+                end_date_obj = None
+        except ValueError:
+            messages.error(request, "Format tanggal tidak valid.")
+            return render(request, "tournament/create_tournament.html")
+
+        prize_pool = prize_pool or None
+        if prize_pool:
+            if not any(char.isdigit() for char in prize_pool):
+                messages.warning(request, "Format hadiah kurang jelas. Contoh: 'Rp 1.000.000'.")
+
+
         Tournament.objects.create(
             name=name,
             sport_type=sport_type,
@@ -113,7 +144,7 @@ def create_tournament(request):
     return render(request, "tournament/create_tournament.html")
 
 
-@login_required 
+@login_required
 def join_tournament(request, pk):
     tournament = get_object_or_404(Tournament, pk=pk)
 
@@ -126,6 +157,13 @@ def join_tournament(request, pk):
                 "tournament": tournament,
                 "error": "Nama tim wajib diisi."
             })
+        
+        if Team.objects.filter(tournament=tournament, name__iexact=team_name).exists():
+            return render(request, "tournament/join_tournament.html", {
+                "tournament": tournament,
+                "error": f"Nama tim '{team_name}' sudah terdaftar di turnamen ini."
+            })
+
 
         Team.objects.create(
             name=team_name,
