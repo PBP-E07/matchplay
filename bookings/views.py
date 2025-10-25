@@ -107,7 +107,7 @@ def show_book(request, field_id):
                 )
                 messages.success(request, "Successfully booked")
 
-                return redirect("bookings:my_bookings_list")
+                return redirect("bookings:show_my_bookings")
                 
             else:
                 messages.error(request, "Booking failed. Please correct the errors below.")
