@@ -40,15 +40,6 @@
     </button>
   </form>
 
-  <!-- Tombol Hapus -->
-  <form method="POST" action="{% url 'tournament:delete_tournament' tournament.id %}" class="mt-4">
-    {% csrf_token %}
-    <button type="submit"
-            class="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded transition">
-      Hapus Turnamen
-    </button>
-  </form>
-
   <a href="{% url 'tournament:tournament_detail' tournament.id %}"
      class="block text-center text-gray-500 mt-4 hover:underline">← Kembali ke Detail</a>
 </div>
