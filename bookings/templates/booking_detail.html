@@ -3,7 +3,7 @@
 {% block content %}
 <div class="container mx-auto px-4 py-8 max-w-3xl">
     
-    <a href="{% url 'bookings:my_bookings_list' %}" class="inline-flex items-center text-lime-600 hover:text-lime-800 mb-4">
+    <a href="{% url 'bookings:show_my_bookings' %}" class="inline-flex items-center text-lime-600 hover:text-lime-800 mb-4">
         <i class="fa-solid fa-arrow-left mr-2"></i>
         Back to My Bookings
     </a>
@@ -44,7 +44,7 @@
             </div>
 
             <div class="mt-6 pt-6 border-t border-gray-200">
-                <a href="{% url 'bookings:book_field' booking.field.id %}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                <a href="{% url 'bookings:show_book' booking.field.id %}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
                     Book this Venue Again
                 </a>
             </div>

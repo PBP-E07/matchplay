@@ -32,7 +32,7 @@
                                 {{ booking.start_time|time:"H:i" }} - {{ booking.end_time|time:"H:i" }}
                             </p>
                         </div>
-                        <a href="{% url 'bookings:booking_detail' booking.id %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-lime-500 hover:bg-lime-600">
+                        <a href="{% url 'bookings:show_booking_detail' booking.id %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-lime-500 hover:bg-lime-600">
                             View Details
                         </a>
                     </div>
@@ -63,7 +63,7 @@
                                 {{ booking.start_time|time:"H:i" }} - {{ booking.end_time|time:"H:i" }} (Completed)
                             </p>
                         </div>
-                        <a href="{% url 'bookings:booking_detail' booking.id %}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        <a href="{% url 'bookings:show_booking_detail' booking.id %}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
                             View Details
                         </a>
                     </div>

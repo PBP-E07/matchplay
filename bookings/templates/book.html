@@ -2,6 +2,14 @@
 {% load static %}
 
 {% block content %}
+<style>
+    .time-slot-label.selected {
+        background-color: #16a34a;
+        color: white;
+        border-color: #16a34a;
+    }
+</style>
+
 <div class="container mx-auto px-4 py-8 max-w-2xl flex flex-col gap-8">
     <div class="flex flex-col gap-4">
         <p class="text-3xl font-bold mb-4">Book {{ field.name }}</p>
@@ -64,151 +72,151 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const dateInput = document.getElementById("id_booking_date");
-        const timeSlotContainer = document.getElementById("time-slot-options");
-        const loadingMessage = document.getElementById("loading-slots");
-        const slotsMessage = document.getElementById("slots-message");
-        const submitButton = document.getElementById("submit-button");
-        const fieldId = "{{ field.id }}";
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const dateInput = document.getElementById("id_booking_date");
+            const timeSlotContainer = document.getElementById("time-slot-options");
+            const loadingMessage = document.getElementById("loading-slots");
+            const slotsMessage = document.getElementById("slots-message");
+            const submitButton = document.getElementById("submit-button");
+            const fieldId = "{{ field.id }}";
 
-        let hasAvailableSlots = false;
+            let hasAvailableSlots = false;
 
-        function updateSelectionStyle() {
-            const allLabels = timeSlotContainer.querySelectorAll(".time-slot-label");
-            
-            allLabels.forEach(lbl => {
-                lbl.classList.remove("selected");
-            });
+            function updateSelectionStyle() {
+                console.log("updateSelectionStyle running...");
+                const allLabels = timeSlotContainer.querySelectorAll(".time-slot-label");
+                let radioIsChecked = false;
 
-            const checkedRadio = timeSlotContainer.querySelector("input[name='time_slot']:checked");
+                allLabels.forEach(lbl => {
+                    lbl.classList.remove("selected");
+                    const radioInside = lbl.querySelector("input[type='radio']");
+                    if (radioInside && radioInside.checked && !radioInside.disabled) {
+                        console.log("Applying 'selected' to label for:", radioInside.id);
+                        lbl.classList.add("selected");
+                        radioIsChecked = true;
+                    }
+                });
+                submitButton.disabled = !radioIsChecked;
+                console.log("Submit button disabled:", submitButton.disabled);
+            }
 
-            if (checkedRadio) {
-                checkedRadio.closest(".time-slot-label").classList.add("selected");
-                submitButton.disabled = false;
-            } else {
+            async function fetchAndDisplaySlots(selectedDate) {
+                // --- Clear container and show loading message ---
+                timeSlotContainer.innerHTML = ''; // Clear everything first
+                loadingMessage.textContent = "Loading available slots..."; // Reset loading text
+                loadingMessage.style.display = 'block'; // Ensure loading is visible
+                slotsMessage.style.display = 'none'; // Hide other messages
+                timeSlotContainer.appendChild(loadingMessage); // Add loading message
+
                 submitButton.disabled = true;
-            }
-        }
+                hasAvailableSlots = false;
 
-        async function fetchAndDisplaySlots(selectedDate) {
-            timeSlotContainer.innerHTML = "";
-            loadingMessage.style.display = "block";
-            slotsMessage.style.display = "none";
-            submitButton.disabled = true;
-            hasAvailableSlots = false;
-            timeSlotContainer.appendChild(loadingMessage);
-
-            if (!selectedDate) {
-                loadingMessage.textContent = "Please select a valid date.";
-                return;
-            }
-
-            // get available slots via AJAX
-            const url = `/bookings/get_slots/${fieldId}/?date=${selectedDate}`;
-
-            try {
-                const response = await fetch(url);
-                const data = await response.json();
-                loadingMessage.style.display = "none";
-
-                if (!response.ok) {
-                    throw new Error(data.error || `HTTP error! Status: ${response.status}`);
+                if (!selectedDate) {
+                    loadingMessage.textContent = "Please select a valid date.";
+                    // Keep the loading message visible, don't clear container again here
+                    return;
                 }
 
-                if (data.slots && data.slots.length > 0) {
-                    data.slots.forEach((slot, index) => {
-                        const slotValue = `${slot.start}-${slot.end}`;
-                        const inputId = `id_time_slot_${index}`;
+                const url = `/bookings/get_slots/${fieldId}/?date=${selectedDate}`;
+                console.log("Fetching slots from:", url);
 
-                        const label = document.createElement("label");
-                        label.htmlFor = inputId;
-                        label.classList.add("time-slot-label");
+                try {
+                    const response = await fetch(url);
+                    const data = await response.json();
 
-                        // create screen reader only input
-                        // or custom radio input
-                        const input = document.createElement("input");
-                        input.type = "radio";
-                        input.name = "time_slot";
-                        input.value = slotValue;
-                        input.id = inputId;
-                        input.required = true;
-                        input.className = "sr-only";
+                    // --- Clear only the loading message ---
+                    loadingMessage.remove(); // Remove the specific loading element
 
-                        let labelText = `${slot.start}`;
-                        let labelClasses = "block w-full text-center px-4 py-3 border rounded-lg text-sm font-medium cursor-pointer transition-colors duration-200 ";
-
-                        if (slot.status === "available") {
-                            hasAvailableSlots = true;
-                            labelClasses += "border-gray-300 text-gray-700 bg-white hover:bg-gray-50";
-                            input.addEventListener("change", updateSelectionStyle);
-                        } else {
-                            input.disabled = true;
-                            labelClasses += "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed ";
-                            if (slot.status === "booked") {
-                                labelText += " (Booked)";
-                                labelClasses += "line-through";
-                            } else if (slot.status === "past") {
-                                labelText += " (Past)";
-                                labelClasses += "opacity-60";
-                            }
-                        }
-
-                        label.className = labelClasses;
-                        label.appendChild(input);
-                        const textSpan = document.createElement("span");
-                        textSpan.textContent = labelText;
-                        label.appendChild(textSpan);
-
-                        timeSlotContainer.appendChild(label);
-                    });
-
-                    updateSelectionStyle();
-
-                    if (!hasAvailableSlots) {
-                        slotsMessage.textContent = "No available slots for booking on this date.";
-                        slotsMessage.className = "text-gray-500 text-sm col-span-full";
-                        slotsMessage.style.display = "block";
-                        timeSlotContainer.appendChild(slotsMessage);
-                        submitButton.disabled = true;
+                    if (!response.ok) {
+                        throw new Error(data.error || `HTTP error! Status: ${response.status}`);
                     }
 
-                } else {
-                    slotsMessage.textContent = "No time slots defined for this day.";
-                    slotsMessage.className = "text-gray-500 text-sm col-span-full";
+                    console.log("Received data:", data); // Log received data
+
+                    if (data.slots && data.slots.length > 0) {
+                        console.log("Processing slots..."); // Log before loop
+                        data.slots.forEach((slot, index) => {
+                            console.log("Creating elements for slot:", slot); // Log each slot
+                            const slotValue = `${slot.start}-${slot.end}`;
+                            const inputId = `id_time_slot_${index}`;
+
+                            const label = document.createElement("label");
+                            label.htmlFor = inputId;
+
+                            const input = document.createElement("input");
+                            input.type = "radio";
+                            input.name = "time_slot";
+                            input.value = slotValue;
+                            input.id = inputId;
+                            input.required = true;
+                            input.className = "sr-only";
+
+                            let labelText = `${slot.start}`;
+                            let labelClasses = "time-slot-label block w-full text-center px-4 py-3 border rounded-lg text-sm font-medium cursor-pointer transition-colors duration-200 ";
+
+                            if (slot.status === "available") {
+                                hasAvailableSlots = true;
+                                labelClasses += "border-gray-300 text-gray-700 bg-white hover:bg-gray-50";
+                                input.addEventListener("change", updateSelectionStyle);
+                                console.log("Added listener to:", input.id);
+                            } else {
+                                input.disabled = true;
+                                labelClasses += "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed ";
+                                if (slot.status === "booked") { labelText += " (Booked)"; labelClasses += "line-through"; }
+                                else if (slot.status === "past") { labelText += " (Past)"; labelClasses += "opacity-60"; }
+                            }
+
+                            label.className = labelClasses;
+                            label.appendChild(input);
+                            const textSpan = document.createElement("span");
+                            textSpan.textContent = labelText;
+                            label.appendChild(textSpan);
+
+                            // --- Append the created label ---
+                            timeSlotContainer.appendChild(label);
+                            console.log("Appended label for:", inputId); // Log append
+                        });
+
+                        updateSelectionStyle(); // Initial check
+
+                        if (!hasAvailableSlots) {
+                            slotsMessage.textContent = "No available slots for booking on this date.";
+                            slotsMessage.className = "text-gray-500 text-sm col-span-full";
+                            slotsMessage.style.display = "block";
+                            timeSlotContainer.appendChild(slotsMessage); // Append message
+                            submitButton.disabled = true;
+                        }
+                    } else {
+                        console.log("No slots found in data."); // Log empty slots case
+                        slotsMessage.textContent = "No time slots defined for this day.";
+                        slotsMessage.className = "text-gray-500 text-sm col-span-full";
+                        slotsMessage.style.display = "block";
+                        timeSlotContainer.appendChild(slotsMessage); // Append message
+                        submitButton.disabled = true;
+                    }
+                } catch (error) {
+                    console.error("Fetch error:", error); // Log the actual error
+                    // --- Clear container on error and show error message ---
+                    timeSlotContainer.innerHTML = ''; // Clear everything
+                    slotsMessage.textContent = `Error loading time slots: ${error.message}. Please try refreshing.`;
+                    slotsMessage.className = "text-red-600 text-sm col-span-full";
                     slotsMessage.style.display = "block";
-                    timeSlotContainer.appendChild(slotsMessage);
+                    timeSlotContainer.appendChild(slotsMessage); // Add error message
                     submitButton.disabled = true;
                 }
-            } catch (error) {
-                loadingMessage.style.display = "none";
-                slotsMessage.textContent = `Error loading time slots: ${error.message}. Please try refreshing.`;
-                slotsMessage.className = "text-red-600 text-sm col-span-full";
-                slotsMessage.style.display = "block";
-                timeSlotContainer.appendChild(slotsMessage);
-                submitButton.disabled = true;
-                console.error("Fetch error:", error);
             }
-        }
 
-        if (dateInput.value) {
-            fetchAndDisplaySlots(dateInput.value);
-        } else {
-            const today = new Date().toISOString().split("T")[0];
-            dateInput.value = today;
-            fetchAndDisplaySlots(today);
-        }
+            // --- Initial Load ---
+            if (dateInput.value) { fetchAndDisplaySlots(dateInput.value); }
+            else { const today = new Date().toISOString().split("T")[0]; dateInput.value = today; fetchAndDisplaySlots(today); }
 
-        dateInput.addEventListener("change", function() {
-            fetchAndDisplaySlots(this.value);
+            // --- Event Listener for Date Change ---
+            dateInput.addEventListener("change", function() { fetchAndDisplaySlots(this.value); });
+
+            // --- Form Submission Handler ---
+            const bookingForm = document.getElementById("booking-form");
+            bookingForm.addEventListener("submit", function() { submitButton.disabled = true; submitButton.textContent = "Processing..."; });
         });
-
-        const bookingForm = document.getElementById("booking-form");
-        bookingForm.addEventListener("submit", function() {
-            submitButton.disabled = true;
-            submitButton.textContent = "Processing...";
-        });
-    });
     </script>
 {% endblock scripts %}
