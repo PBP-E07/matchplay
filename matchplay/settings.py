@@ -135,6 +135,10 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LOGIN_URL = '/login/'
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://valerian-hizkia-matchplay.pbp.cs.ui.ac.id"
+]
+
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
