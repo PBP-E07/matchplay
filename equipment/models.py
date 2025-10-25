@@ -11,8 +11,6 @@ class Equipment(models.Model):
     def __str__(self):
         return self.name
 
-
-
 class Rental(models.Model):
     equipment = models.ForeignKey(Equipment, on_delete=models.CASCADE)
     renter_name = models.CharField(max_length=100)
