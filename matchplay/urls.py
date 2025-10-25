@@ -22,5 +22,9 @@ urlpatterns = [
     path('', include('blog.urls')),
     path('', include('main.urls')),
     path('dashboard/', include('dashboard.urls')),
-    path('equipment/', include('equipment.urls')),
+    path('equipments/', include('equipment.urls')),
+    path('', include('blog.urls')),
+    path('', include('authentication.urls')),
+    path('bookings/', include('bookings.urls')),
+    path('matches/', include('matches.urls')),
 ]

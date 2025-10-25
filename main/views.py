@@ -1,12 +1,11 @@
 from django.shortcuts import render
-from django.core.paginator import Paginator
 from django.template.loader import render_to_string
 from django.http import HttpResponse
 from fields.models import Field
 from django.db.models import Q
 
 def show_main(request):
-    query = request.GET.get('q', '')
+    query = request.GET.get("q", "")
     
     if query:
         field_list = Field.objects.filter(
@@ -15,19 +14,16 @@ def show_main(request):
             Q(category__name__icontains=query)
         ).distinct()
     else:
-        field_list = Field.objects.all().order_by('name')
-
-    paginator = Paginator(field_list, 9) 
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+        field_list = Field.objects.all().order_by("name")
 
     context = {
-        'fields': page_obj, 
+        "fields": field_list
     }
-    return render(request, 'main.html', context)
+
+    return render(request, "main.html", context)
 
 def search_fields(request):
-    query = request.GET.get('q', '')
+    query = request.GET.get("q", "")
     
     if query:
         field_list = Field.objects.filter(
@@ -36,17 +32,13 @@ def search_fields(request):
             Q(category__name__icontains=query)
         ).distinct()
     else:
-        field_list = Field.objects.all().order_by('name')
-
-    paginator = Paginator(field_list, 9)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+        field_list = Field.objects.all().order_by("name")
 
     context = {
-        'page_obj': page_obj,
-        'request': request,
+        "field_list": field_list,
+        "request": request,
     }
     
-    html = render_to_string('partials/field_list_content.html', context)
+    html = render_to_string("partials/field_list_content.html", context)
     
     return HttpResponse(html)

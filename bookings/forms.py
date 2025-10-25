@@ -1,6 +1,6 @@
 # bookings/forms.py
 from django import forms
-from .models import Booking
+from bookings.models import Booking
 import datetime
 from django.utils import timezone
 
@@ -9,8 +9,9 @@ class BookingForm(forms.Form):
         widget=forms.DateInput(attrs={'type': 'date'}),
         label="Select Date"
     )
+
     time_slot = forms.ChoiceField(
-        choices=[], # Choices will be populated dynamically
+        choices=[],
         widget=forms.RadioSelect,
         label="Select Time Slot"
     )
@@ -19,7 +20,6 @@ class BookingForm(forms.Form):
         self.field = kwargs.pop('field', None)
         super().__init__(*args, **kwargs)
 
-        # Set minimum date to today and maximum date to one month from today
         today = timezone.now().date()
         max_date = today + datetime.timedelta(days=30)
         self.fields['booking_date'].widget.attrs.update({
@@ -27,16 +27,15 @@ class BookingForm(forms.Form):
             'max': max_date.strftime('%Y-%m-%d')
         })
 
-        # Populate time slots based on initial date or default to today if no date selected yet
         initial_date_str = self.data.get('booking_date') if self.data else None
         initial_date = None
         if initial_date_str:
             try:
                 initial_date = datetime.datetime.strptime(initial_date_str, '%Y-%m-%d').date()
             except ValueError:
-                initial_date = today # Fallback to today if date format is invalid
+                initial_date = today
         else:
-           initial_date = today # Default to today if no date provided initially
+           initial_date = today
 
         if self.field and initial_date:
             available_slots = Booking.get_available_slots(self.field.id, initial_date)
@@ -58,14 +57,11 @@ class BookingForm(forms.Form):
         booking_date = self.cleaned_data.get('booking_date') # Use cleaned date
 
         if not time_slot_str or not booking_date:
-             # If date is invalid, time slot validation can't proceed properly
-             # The error will be handled by clean_booking_date
             return time_slot_str
 
         start_time_str, end_time_str = time_slot_str.split('-')
         start_time = datetime.datetime.strptime(start_time_str, '%H:%M').time()
 
-        # Check if the slot is still available (could have been booked by someone else)
         if Booking.objects.filter(field=self.field, booking_date=booking_date, start_time=start_time).exists():
             raise forms.ValidationError("This time slot has just been booked. Please choose another one.")
 

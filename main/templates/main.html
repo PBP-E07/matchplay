@@ -10,6 +10,7 @@
             src="{% static 'images/field.jpg' %}"
             alt="Banner"
         />
+
         <img
             class="opacity-20 absolute inset-0 w-full h-full object-cover z-20"
             src="{% static 'images/overlay.svg' %}"
@@ -47,6 +48,7 @@
                     class="rounded-xl px-6 border flex gap-2 items-center justify-center"
                 >
                     <img src="{% static 'images/funnel.svg' %}" />
+
                     Filters
                 </button>
 
@@ -62,23 +64,13 @@
     </div>
 
     <div class="w-full flex justify-center mt-8">
-        <div class="flex bg-gray-100/90 rounded-full mx-auto shadow-md">
+        <div class="flex rounded-full mx-auto shadow-md">
             <button
                 id="btn-find-venues"
                 class="flex items-center justify-center gap-2.5 px-6 py-2.5 rounded-full text-sm font-semibold duration-200"
             >
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                    class="w-5 h-5"
-                >
-                    <path
-                        fill-rule="evenodd"
-                        d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 0 0 .281-.14c.186-.1.4-.223.615-.372a17.507 17.507 0 0 0 2.56-2.07C15.8 14.61 17 12.76 17 10c0-3.866-3.134-7-7-7S3 6.134 3 10c0 2.76 1.2 4.61 2.92 6.346a17.507 17.507 0 0 0 2.56 2.07c.215.149.43.272.615.372.094.05.18.09.282.14l.018.008.006.003zM10 11.25a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5z"
-                        clip-rule="evenodd"
-                    />
-                </svg>
+                <img src="{% static 'images/location.svg' %}">    
+
                 Find Venues
             </button>
 
@@ -86,19 +78,8 @@
                 id="btn-join-matches"
                 class="flex items-center justify-center gap-2.5 px-6 py-2.5 rounded-full text-sm font-semibold duration-200"
             >
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                    class="w-5 h-5"
-                >
-                    <path
-                        d="M10 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM3.465 14.493a1.23 1.23 0 0 0 .41 1.412A9.957 9.957 0 0 0 10 18c2.31 0 4.438-.784 6.126-2.095a1.23 1.23 0 0 0 .41-1.412A9.99 9.99 0 0 0 10 12.01c-2.31 0-4.438.784-6.126 2.095Z"
-                    />
-                    <path
-                        d="M16.707 12.293a1 1 0 0 1 0 1.414l-1 1a1 1 0 1 1-1.414-1.414l1-1a1 1 0 0 1 1.414 0Zm-13.414 0a1 1 0 0 0 0 1.414l1 1a1 1 0 0 0 1.414-1.414l-1-1a1 1 0 0 0-1.414 0Z"
-                    />
-                </svg>
+                <img src="{% static 'images/people.svg' %}">
+
                 Join Matches
             </button>
         </div>
@@ -108,7 +89,7 @@
         id="fields-container"
         class="w-full max-w-4xl mx-auto grid grid-cols-1 gap-6 mt-8" 
         >
-        {% include 'partials/field_list_content.html' with page_obj=fields %}
+        {% include 'partials/field_list_content.html' with fields=fields %}
     </div>
 
     <div id="matches-container" class="hidden w-full max-w-4xl mx-auto mt-6">

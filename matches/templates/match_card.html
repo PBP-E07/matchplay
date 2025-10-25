@@ -1,0 +1,86 @@
+{% load static %}
+<div class="bg-white rounded-lg shadow-md overflow-hidden flex flex-col">
+    <!-- Card Header -->
+    <div class="p-4 border-b border-gray-200">
+        <div class="flex justify-between items-start">
+            <div>
+                <h2 class="text-xl font-bold text-gray-800">{{ match.sport }}</h2>
+                <p class="text-sm text-gray-600">{{ match.field.name }}</p>
+            </div>
+            <div class="text-right">
+                <span class="inline-block px-2 py-0.5 text-xs font-semibold rounded
+                    {% if match.skill_level == 'Beginner' %} bg-blue-100 text-blue-800
+                    {% elif match.skill_level == 'Intermediate' %} bg-orange-100 text-orange-800
+                    {% elif match.skill_level == 'Advanced' %} bg-red-100 text-red-800
+                    {% else %} bg-gray-100 text-gray-800 {% endif %}">
+                    {{ match.skill_level }}
+                </span>
+                <span class="block mt-1 px-2 py-0.5 text-xs font-semibold rounded bg-yellow-100 text-yellow-800">
+                    {{ match.status }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card Body -->
+    <div class="p-4 space-y-3 text-sm text-gray-700 flex-grow">
+        <div class="flex items-center">
+            <i class="fas fa-map-marker-alt w-5 text-center text-gray-500 mr-2"></i>
+            <span>{{ match.field.location }}</span>
+        </div>
+        <div class="flex items-center">
+            <i class="fas fa-calendar-alt w-5 text-center text-gray-500 mr-2"></i>
+            <span>{{ match.match_date|date:"l, F j, Y" }}</span> {# Format date #}
+        </div>
+        <div class="flex items-center">
+            <i class="fas fa-clock w-5 text-center text-gray-500 mr-2"></i>
+            <span>{{ match.start_time|time:"H:i" }} - {{ match.end_time|time:"H:i" }}</span> {# Format time #}
+        </div>
+        {% if match.description %}
+        <div class="flex items-start">
+            <i class="fas fa-info-circle w-5 text-center text-gray-500 mr-2 mt-0.5"></i>
+            <p>{{ match.description }}</p>
+        </div>
+        {% endif %}
+        <div class="flex items-center">
+            <i class="fas fa-user w-5 text-center text-gray-500 mr-2"></i>
+            <span>Organized by <strong>{{ match.organizer.username }}</strong></span>
+        </div>
+    </div>
+
+    <!-- Player Count & Progress -->
+    <div class="px-4 pt-2 pb-4">
+        <div class="flex justify-between items-center text-sm mb-1">
+            <span class="font-medium">{{ match.current_player_count }}/{{ match.max_players }} Players</span>
+            <span class="text-orange-600 font-semibold">{{ match.spots_left }} spot{{ match.spots_left|pluralize }} left</span>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-2">
+            <div class="bg-green-600 h-2 rounded-full" style="width: {{ match.progress_percentage }}%"></div>
+        </div>
+    </div>
+
+    <!-- Card Footer -->
+    <div class="p-4 border-t border-gray-200 bg-gray-50 flex justify-between items-center">
+        <div>
+            <p class="text-xs text-gray-600">Price per person</p>
+            <p class="text-lg font-bold text-gray-800">Rp{{ match.price_per_person|floatformat:0 }}</p> {# Format price #}
+        </div>
+        {# Check if user is already in the match #}
+        {% if user in match.players.all %}
+             <span class="px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-500 bg-gray-100">
+                Already Joined
+            </span>
+        {% elif match.is_full %}
+             <span class="px-4 py-2 border border-red-300 text-sm font-medium rounded-md text-red-700 bg-red-50">
+                Match Full
+            </span>
+        {% else %}
+            <form action="{% url 'matches:join_match' match.id %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition duration-150">
+                    Join Match
+                </button>
+            </form>
+        {% endif %}
+    </div>
+</div>
