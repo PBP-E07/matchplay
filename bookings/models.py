@@ -58,6 +58,7 @@ class Booking(models.Model):
             (datetime.time(12, 0), datetime.time(13, 0)),
             (datetime.time(13, 0), datetime.time(14, 0)),
         ]
+        
         booked_start_times = set(Booking.objects.filter(field_id=field_id, booking_date=date).values_list("start_time", flat=True))
 
         slots_with_status = []

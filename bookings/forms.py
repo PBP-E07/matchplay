@@ -1,4 +1,3 @@
-# bookings/forms.py
 from django import forms
 from bookings.models import Booking
 import datetime
@@ -6,7 +5,7 @@ from django.utils import timezone
 
 class BookingForm(forms.Form):
     booking_date = forms.DateField(
-        widget=forms.DateInput(attrs={'type': 'date'}),
+        widget=forms.DateInput(attrs={ "type": "date" }),
         label="Select Date"
     )
 

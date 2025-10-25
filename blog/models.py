@@ -25,5 +25,5 @@ class Blog(models.Model):
 
     def get_absolute_url(self):
         from django.urls import reverse
-        return reverse('main:blog-detail', kwargs={'pk': self.pk})
+        return reverse('blog:blog-detail', kwargs={'pk': self.pk})
 
