@@ -20,7 +20,7 @@ class Booking(models.Model):
         ordering = ["booking_date", "start_time"]
 
     def __str__(self):
-        return f"Booking for { self.field.name } by { self.user.username } on { self.booking_date } from {self.start_time.strftime("%H:%M")} to {self.end_time.strftime("%H:%M")}"
+        return f"Booking for { self.field.name } by { self.user.username } on { self.booking_date }"
 
     @property
     def is_past_booking(self):
