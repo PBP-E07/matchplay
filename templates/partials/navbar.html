@@ -12,7 +12,7 @@
 
             <div class="hidden md:flex md:items-center md:space-x-8">
                 <a href="{% url 'main:show_main' %}" class="text-gray-600 hover:text-gray-900 font-medium">Venues</a>
-                <a href="{% url 'matches:match_list' %}" class="text-gray-600 hover:text-gray-900 font-medium">Matchmaking</a>
+                <a href="{% url 'matches:show_matches' %}" class="text-gray-600 hover:text-gray-900 font-medium">Matchmaking</a>
                 <a href="{% url 'equipment:equipment_list' %}" class="text-gray-600 hover:text-gray-900 font-medium">Equipment</a>
                 <a href="{% url 'tournament:tournament_list' %}" class="text-gray-600 hover:text-gray-900 font-medium">Tournament</a>
                 <a href="{% url 'blog:blog-list' %}" class="text-gray-600 hover:text-gray-900 font-medium">Blog</a>
@@ -43,21 +43,4 @@
             </div>
         </div>
     </div>
-     <script>
-        // Basic mobile menu toggle
-        const btn = document.getElementById('mobile-menu-button');
-        const menu = document.getElementById('mobile-menu');
-        const openIcon = document.getElementById('menu-open-icon');
-        const closeIcon = document.getElementById('menu-close-icon');
-
-        btn.addEventListener('click', () => {
-          menu.classList.toggle('hidden');
-          openIcon.classList.toggle('hidden');
-          openIcon.classList.toggle('block');
-          closeIcon.classList.toggle('hidden');
-          closeIcon.classList.toggle('block');
-          const isExpanded = menu.classList.contains('hidden') ? 'false' : 'true';
-          btn.setAttribute('aria-expanded', isExpanded);
-        });
-    </script>
 </nav>

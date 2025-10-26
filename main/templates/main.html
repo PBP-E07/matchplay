@@ -157,7 +157,7 @@
             fieldsContainer.innerHTML =
                 '<p class="col-span-3 text-center text-gray-500">Loading...</p>';
 
-            const url = `/search-fields/?q=${encodeURIComponent(query)}`;
+            const url = `/search_fields/?q=${encodeURIComponent(query)}`;
 
             fetch(url)
                 .then((response) => {

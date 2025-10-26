@@ -7,131 +7,200 @@ from django.utils import timezone
 from .models import Match, MatchPlayer
 from .forms import CreateMatchForm
 from django.db import IntegrityError
-from django.core.exceptions import ValidationError
-
-# --- ADD THESE TWO IMPORTS ---
 import datetime
 from fields.models import Field 
-# --- END ADDITIONS ---
+from bookings.models import Booking
 
 @login_required
-def match_list_view(request):
-    """Displays a list of pending matches that are not full and not in the past."""
+def show_matches(request):
+    # get date now
     now = timezone.now()
-    # Filter for matches that are pending, not full, and haven't ended yet
-    available_matches = Match.objects.filter(
-        status='Pending',
-        match_date__gte=now.date() # Match date is today or in the future
+
+    # get available matches to join
+    available_matches_qs = Match.objects.filter(
+        status="Pending",
+        match_date__gte=now.date()
     ).exclude(
-       match_date=now.date(), end_time__lte=now.time() # Exclude if today and already ended
-    ).order_by('match_date', 'start_time')
+        # exclude those with today's date and less than current time
+        match_date=now.date(), end_time__lte=now.time()
+    ).select_related("organizer", "field").prefetch_related("matchplayer_set")
 
-    # Further filter out full matches
-    matches_to_display = [match for match in available_matches if not match.is_full]
+    matches_to_display = []
+    # get matches to display
+    for match in available_matches_qs:
+        current_player_count = match.matchplayer_set.count()
+        is_full = current_player_count >= match.max_players
 
+        if not is_full:
+            match.current_player_count = current_player_count
+            match.spots_left = max(0, match.max_players - current_player_count)
+            match.is_full = is_full
+            
+            if match.max_players > 0:
+                match.progress_percentage = (current_player_count / match.max_players) * 100
+            else:
+                match.progress_percentage = 0
+            
+            matches_to_display.append(match)
+
+    # pass it to context
     context = {
-        'matches': matches_to_display,
-        'match_count': len(matches_to_display)
+        "matches": matches_to_display,
+        "match_count": len(matches_to_display)
     }
-    return render(request, 'match_list.html', context)
+
+    return render(request, "match_list.html", context)
 
 @login_required
-def create_match_view(request):
-    """Handles the creation of a new match."""
-    if request.method == 'POST':
-        form = CreateMatchForm(request.POST) # Bind form to POST data
-        if form.is_valid():
-            try:
-                match = form.save(commit=False)
-                match.organizer = request.user
-                
-                # Get start_time and end_time from the form's cleaned data
-                match.start_time = form.cleaned_data['start_time']
-                match.end_time = form.cleaned_data['end_time']
-                
-                match.save() # This calls model.clean()
+def show_create_match(request):
+    if request.method == "POST":
+        form = CreateMatchForm(request.POST)
 
-                # Automatically add the organizer as the first player
+        if form.is_valid():
+            field = form.cleaned_data["field"]
+            match_date = form.cleaned_data["match_date"]
+            time_slot_str = form.cleaned_data["time_slot"]
+            
+            start_time_str, end_time_str = time_slot_str.split("-")
+            start_time = datetime.datetime.strptime(start_time_str, "%H:%M").time()
+            end_time = datetime.datetime.strptime(end_time_str, "%H:%M").time()
+
+            now = timezone.localtime(timezone.now())
+
+            # similar filtering method to "bookings" app
+            if match_date < now.date() or (match_date == now.date() and start_time < now.time()):
+                messages.error(request, "Cannot create a match for a time slot that has already passed.")
+            
+            elif Booking.objects.filter(field=field, booking_date=match_date, start_time=start_time).exists():
+                messages.error(request, "This time slot is already booked directly. Please select another.")
+
+            elif Match.objects.filter(field=field, match_date=match_date, start_time=start_time, status__in=["Pending", "Confirmed"]).exists():
+                messages.error(request, "This time slot is already taken by another match. Please select another.")
+            
+            # create match if there is no errors
+            else:
+                match = Match.objects.create(
+                    organizer=request.user,
+                    field=field,
+                    match_date=match_date,
+                    start_time=start_time,
+                    end_time=end_time,
+                    skill_level=form.cleaned_data["skill_level"],
+                    max_players=form.cleaned_data["max_players"],
+                    price_per_person=form.cleaned_data["price_per_person"],
+                    description=form.cleaned_data["description"],
+                    status="Pending"
+                )
+                
                 MatchPlayer.objects.create(match=match, user=request.user)
 
                 messages.success(request, f"Match room created successfully for {match.field.name} on {match.match_date}.")
-                return redirect('matches:match_list') # Redirect to the match list
-            
-            except ValidationError as e:
-                # Catch validation errors raised from model.clean()
-                # Add this as a non-field error to the *existing* form
-                form.add_error(None, e.messages[0])
-                messages.error(request, "Please correct the errors below.")
-            except Exception as e:
-                # Catch other unexpected errors
-                form.add_error(None, f"An unexpected error occurred: {e}")
-                messages.error(request, "An unexpected error occurred. Please try again.")
-            
-            # If try/except failed, we fall through to render the *same* form object
+                return redirect("matches:show_matches")
         
         else:
-            # form.is_valid() was False.
-            messages.error(request, "Please correct the errors below.")
+            messages.error(request, "Please correct the errors in the form below.")
         
-        # --- Key Change ---
-        # On a failed POST (either form.is_valid()=False or try/except failure),
-        # render the *existing* 'form' object which contains the errors.
-        context = {'form': form}
-        return render(request, 'create_match_form.html', context)
+        context = { "form": form }
+        return render(request, "create_match_form.html", context)
 
-    else: # GET request
-        form = CreateMatchForm() # Create a new, empty form
-        context = {'form': form}
-        return render(request, 'create_match_form.html', context)
-
+    else:
+        form = CreateMatchForm()
+        context = { "form": form }
+        return render(request, "create_match_form.html", context)
 
 @login_required
-@require_POST # Ensure only POST requests can join
-def join_match_view(request, match_id):
-    """Handles a user joining a match."""
-    match = get_object_or_404(Match, pk=match_id)
+@require_POST
+def show_join_match(request, match_id):
+    match = get_object_or_404(Match.objects.prefetch_related("matchplayer_set"), pk=match_id)
 
-    # Prevent joining if not pending, past, or full
-    if match.status != 'Pending':
+    now = timezone.now()
+    match_end_datetime = timezone.make_aware(
+        datetime.datetime.combine(match.match_date, match.end_time)
+    )
+    is_past = match_end_datetime < now
+    current_player_count = match.matchplayer_set.count()
+    is_full = current_player_count >= match.max_players
+
+    # cannot join completed matches
+    if match.status != "Pending":
         messages.error(request, "This match is no longer available to join.")
-        return redirect('matches:match_list')
-    if match.is_past_match:
-         messages.error(request, "This match has already passed.")
-         return redirect('matches:match_list')
-    if match.is_full:
+        return redirect("matches:show_matches")
+    if is_past:
+        messages.error(request, "This match has already passed.")
+        return redirect("matches:show_matches")
+    if is_full:
         messages.error(request, "This match is already full.")
-        return redirect('matches:match_list')
+        return redirect("matches:show_matches")
 
-    # Try to add the player
     try:
+        # try to create a MatchPlayer object
         MatchPlayer.objects.create(match=match, user=request.user)
         messages.success(request, f"Successfully joined the match at {match.field.name}.")
-        # Check if the match is now full after joining
-        if match.is_full:
-             messages.info(request, "The match is now full!")
+        
+        if (current_player_count + 1) >= match.max_players:
+            messages.info(request, "The match is now full!")
     except IntegrityError:
-        # This happens if the user is already in the match (due to unique_together)
         messages.warning(request, "You have already joined this match.")
     except Exception as e:
-         messages.error(request, f"An error occurred while joining: {e}")
+        messages.error(request, f"An error occurred while joining: {e}")
 
+    return redirect("matches:show_matches")
 
-    return redirect('matches:match_list') # Redirect back to the list
-
-# AJAX view for getting slots
 def get_match_slots_ajax(request, field_id):
-    date_str = request.GET.get('date')
-    if not date_str:
-        return JsonResponse({'error': 'Date parameter is required'}, status=400)
-    
-    try:
-        booking_date = datetime.datetime.strptime(date_str, '%Y-%m-%d').date()
-    except ValueError:
-        return JsonResponse({'error': 'Invalid date format. Use YYYY-MM-DD.'}, status=400)
+    date_str = request.GET.get("date")
 
-    # Get slots status from model
-    try:
-        all_slots = Match.get_all_slots_status(field_id, booking_date)
-        return JsonResponse({'slots': all_slots})
-    except Field.DoesNotExist:
-        return JsonResponse({'error': 'Field not found.'}, status=404)
+    booking_date = datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
+
+    today = timezone.now().date()
+    max_date = today + datetime.timedelta(days=30)
+
+    if booking_date > max_date:
+        return JsonResponse({ "error": "Cannot check availability more than 30 days in advance.", "slots": [] }, status=400)
+    
+    if not Field.objects.filter(pk=field_id).exists():
+        return JsonResponse({"error": "Field not found."}, status=404)
+
+    booked_times = set(
+        Booking.objects.filter(field_id=field_id, booking_date=booking_date).values_list("start_time", flat=True)
+    )
+    
+    match_times = set(
+        Match.objects.filter(
+            field_id=field_id, 
+            match_date=booking_date, 
+            status__in=["Pending", "Confirmed"]
+        ).values_list("start_time", flat=True)
+    )
+    
+    unavailable_times = booked_times.union(match_times)
+    
+    slots = [
+        (datetime.time(10, 0), datetime.time(11, 0)),
+        (datetime.time(11, 0), datetime.time(12, 0)),
+        (datetime.time(12, 0), datetime.time(13, 0)),
+        (datetime.time(13, 0), datetime.time(14, 0)),
+    ]
+
+    slots_with_status = []
+    now_time = timezone.localtime(timezone.now()).time()
+
+    for start, end in slots:
+        is_unavailable = start in unavailable_times
+        is_past = (booking_date < today) or (booking_date == today and start < now_time)
+
+        status = "available"
+        if is_past:
+            status = "past"
+        elif is_unavailable:
+            if start in booked_times:
+                status = "booked"
+            else:
+                status = "match_created"
+        
+        slots_with_status.append({
+            "start": start.strftime("%H:%M"),
+            "end": end.strftime("%H:%M"),
+            "status": status
+        })
+
+    return JsonResponse({ "slots": slots_with_status })
