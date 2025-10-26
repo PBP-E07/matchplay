@@ -6,7 +6,7 @@ from .models import Blog
 from .forms import BlogForm
 import json
 from django.urls import reverse
-from django.contrib.auth.decorators import user_passes_test
+from authentication.decorators import admin_required
 
 # Halaman Utama (Seperti di Gambar)
 def blog_list_view(request):
@@ -28,7 +28,7 @@ def blog_detail_view(request, pk):
 # --- AJAX Views ---
 
 # 1. View untuk MENGAMBIL form (Create / Edit)
-@user_passes_test(lambda u: u.is_superuser)
+@admin_required
 def get_blog_form(request, pk=None):
     if pk:
         # Ini untuk Edit
@@ -54,7 +54,7 @@ def get_blog_form(request, pk=None):
     return JsonResponse({'html_form': html_form})
 
 # 2. View untuk CREATE Blog (Handle POST dari AJAX)
-@user_passes_test(lambda u: u.is_superuser)
+@admin_required
 def blog_create_view(request):
     if request.method == 'POST':
         form = BlogForm(request.POST)
@@ -72,7 +72,7 @@ def blog_create_view(request):
     return JsonResponse({'success': False, 'message': 'Invalid request method'})
 
 # 3. View untuk UPDATE Blog (Handle POST dari AJAX)
-@user_passes_test(lambda u: u.is_superuser)
+@admin_required
 def blog_update_view(request, pk):
     blog = get_object_or_404(Blog, pk=pk)
     if request.method == 'POST':
@@ -91,7 +91,7 @@ def blog_update_view(request, pk):
     return JsonResponse({'success': False, 'message': 'Invalid request method'})
 
 # 4. View untuk DELETE Blog (Handle DELETE dari AJAX)
-@user_passes_test(lambda u: u.is_superuser)
+@admin_required
 def blog_delete_view(request, pk):
     blog = get_object_or_404(Blog, pk=pk)
     if request.method == 'POST': # HTML forms tidak support 'DELETE' method, jadi kita pakai POST
