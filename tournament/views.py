@@ -86,7 +86,7 @@ def get_matches_json(request, pk):
     ]
     return JsonResponse(data, safe=False)
 
-
+@login_required
 def create_tournament(request):
     if request.method == "POST":
         name = request.POST.get("name")
@@ -183,6 +183,12 @@ def join_tournament(request, pk):
 def edit_tournament(request, pk):
     tournament = get_object_or_404(Tournament, pk=pk)
 
+    if tournament.created_by != request.user:
+        return render(request, "tournament/access_denied.html", {
+        "tournament": tournament,
+        "message": "Kamu tidak memiliki izin untuk mengedit turnamen ini."
+    })
+
     if request.method == "POST":
         tournament.name = request.POST.get("name")
         tournament.sport_type = request.POST.get("sport_type")
@@ -204,6 +210,12 @@ def edit_tournament(request, pk):
 def delete_tournament(request, pk):
     tournament = get_object_or_404(Tournament, pk=pk)
 
+    if tournament.created_by != request.user:
+        return render(request, "tournament/access_denied.html", {
+        "tournament": tournament,
+        "message": "Kamu tidak memiliki izin untuk mengedit turnamen ini."
+    })
+
     if request.method == "POST":
         tournament.delete()
         return redirect("tournament:tournament_list")
@@ -214,6 +226,12 @@ def delete_tournament(request, pk):
 def create_match(request, pk):
     tournament = get_object_or_404(Tournament, pk=pk)
     teams = tournament.teams.all()
+
+    if tournament.created_by != request.user:
+        return render(request, "tournament/access_denied.html", {
+        "tournament": tournament,
+        "message": "Kamu tidak memiliki izin untuk mengedit turnamen ini."
+    })
 
     if request.method == "POST":
         team1_id = request.POST.get("team1")
@@ -257,6 +275,12 @@ def edit_match(request, pk, match_id):
     tournament = get_object_or_404(Tournament, pk=pk)
     match = get_object_or_404(Match, pk=match_id, tournament=tournament)
 
+    if tournament.created_by != request.user:
+        return render(request, "tournament/access_denied.html", {
+        "tournament": tournament,
+        "message": "Kamu tidak memiliki izin untuk mengedit turnamen ini."
+    })
+
     if request.method == "POST":
         score_team1 = request.POST.get("score_team1")
         score_team2 = request.POST.get("score_team2")
@@ -277,6 +301,12 @@ def edit_match(request, pk, match_id):
 def delete_match(request, pk, match_id):
     tournament = get_object_or_404(Tournament, pk=pk)
     match = get_object_or_404(Match, pk=match_id, tournament=tournament)
+
+    if tournament.created_by != request.user:
+        return render(request, "tournament/access_denied.html", {
+        "tournament": tournament,
+        "message": "Kamu tidak memiliki izin untuk mengedit turnamen ini."
+    })
 
     if request.method == "POST":
         match.delete()
