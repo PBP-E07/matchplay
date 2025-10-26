@@ -3,6 +3,8 @@ from django.contrib.auth.decorators import login_required
 from .models import Tournament, Team, Match
 from django.http import JsonResponse
 from django.utils import timezone
+from django.contrib import messages
+from datetime import datetime
 
 
 # Create your views here.
@@ -36,13 +38,15 @@ def tournament_matches(request, pk):
 
 def get_tournaments_json(request):
     filter_type = request.GET.get("status")  
-    tournaments = Tournament.objects.all().order_by("-start_date")
 
-    if filter_type == "private":
-        if request.user.is_authenticated:
-            tournaments = tournaments.filter(is_private=True, created_by=request.user)
-        else:
-            tournaments = Tournament.objects.none()
+    tournaments = Tournament.objects.filter(is_private=False).order_by("-start_date")
+
+    if request.user.is_authenticated:
+        user_private = Tournament.objects.filter(is_private=True, created_by=request.user)
+        tournaments = (tournaments | user_private).distinct()
+
+    if filter_type == "private" and request.user.is_authenticated:
+        tournaments = tournaments.filter(is_private=True, created_by=request.user)
     elif filter_type == "public":
         tournaments = tournaments.filter(is_private=False)
 
@@ -82,7 +86,7 @@ def get_matches_json(request, pk):
     ]
     return JsonResponse(data, safe=False)
 
-
+@login_required
 def create_tournament(request):
     if request.method == "POST":
         name = request.POST.get("name")
@@ -94,6 +98,33 @@ def create_tournament(request):
         description = request.POST.get("description")
         banner_image = request.POST.get("banner_image")
         is_private = request.POST.get("is_private") == "on"
+
+        if Tournament.objects.filter(name__iexact=name).exists():
+            messages.error(request, "Nama turnamen sudah digunakan. Gunakan nama lain.")
+            return render(request, "tournament/create_tournament.html")
+        
+        try:
+            if start_date:
+                start_date_obj = datetime.strptime(start_date, "%Y-%m-%d").date()
+            else:
+                start_date_obj = timezone.now().date()
+
+            if end_date:
+                end_date_obj = datetime.strptime(end_date, "%Y-%m-%d").date()
+                if start_date_obj > end_date_obj:
+                    messages.error(request, "Tanggal mulai tidak boleh setelah tanggal selesai.")
+                    return render(request, "tournament/create_tournament.html")
+            else:
+                end_date_obj = None
+        except ValueError:
+            messages.error(request, "Format tanggal tidak valid.")
+            return render(request, "tournament/create_tournament.html")
+
+        prize_pool = prize_pool or None
+        if prize_pool:
+            if not any(char.isdigit() for char in prize_pool):
+                messages.warning(request, "Format hadiah kurang jelas. Contoh: 'Rp 1.000.000'.")
+
 
         Tournament.objects.create(
             name=name,
@@ -113,7 +144,7 @@ def create_tournament(request):
     return render(request, "tournament/create_tournament.html")
 
 
-@login_required 
+@login_required
 def join_tournament(request, pk):
     tournament = get_object_or_404(Tournament, pk=pk)
 
@@ -126,6 +157,13 @@ def join_tournament(request, pk):
                 "tournament": tournament,
                 "error": "Nama tim wajib diisi."
             })
+        
+        if Team.objects.filter(tournament=tournament, name__iexact=team_name).exists():
+            return render(request, "tournament/join_tournament.html", {
+                "tournament": tournament,
+                "error": f"Nama tim '{team_name}' sudah terdaftar di turnamen ini."
+            })
+
 
         Team.objects.create(
             name=team_name,
@@ -144,6 +182,12 @@ def join_tournament(request, pk):
 @login_required 
 def edit_tournament(request, pk):
     tournament = get_object_or_404(Tournament, pk=pk)
+
+    if tournament.created_by != request.user:
+        return render(request, "tournament/access_denied.html", {
+        "tournament": tournament,
+        "message": "Kamu tidak memiliki izin untuk mengedit turnamen ini."
+    })
 
     if request.method == "POST":
         tournament.name = request.POST.get("name")
@@ -166,6 +210,12 @@ def edit_tournament(request, pk):
 def delete_tournament(request, pk):
     tournament = get_object_or_404(Tournament, pk=pk)
 
+    if tournament.created_by != request.user:
+        return render(request, "tournament/access_denied.html", {
+        "tournament": tournament,
+        "message": "Kamu tidak memiliki izin untuk mengedit turnamen ini."
+    })
+
     if request.method == "POST":
         tournament.delete()
         return redirect("tournament:tournament_list")
@@ -176,6 +226,12 @@ def delete_tournament(request, pk):
 def create_match(request, pk):
     tournament = get_object_or_404(Tournament, pk=pk)
     teams = tournament.teams.all()
+
+    if tournament.created_by != request.user:
+        return render(request, "tournament/access_denied.html", {
+        "tournament": tournament,
+        "message": "Kamu tidak memiliki izin untuk mengedit turnamen ini."
+    })
 
     if request.method == "POST":
         team1_id = request.POST.get("team1")
@@ -219,6 +275,12 @@ def edit_match(request, pk, match_id):
     tournament = get_object_or_404(Tournament, pk=pk)
     match = get_object_or_404(Match, pk=match_id, tournament=tournament)
 
+    if tournament.created_by != request.user:
+        return render(request, "tournament/access_denied.html", {
+        "tournament": tournament,
+        "message": "Kamu tidak memiliki izin untuk mengedit turnamen ini."
+    })
+
     if request.method == "POST":
         score_team1 = request.POST.get("score_team1")
         score_team2 = request.POST.get("score_team2")
@@ -239,6 +301,12 @@ def edit_match(request, pk, match_id):
 def delete_match(request, pk, match_id):
     tournament = get_object_or_404(Tournament, pk=pk)
     match = get_object_or_404(Match, pk=match_id, tournament=tournament)
+
+    if tournament.created_by != request.user:
+        return render(request, "tournament/access_denied.html", {
+        "tournament": tournament,
+        "message": "Kamu tidak memiliki izin untuk mengedit turnamen ini."
+    })
 
     if request.method == "POST":
         match.delete()

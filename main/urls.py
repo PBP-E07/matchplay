@@ -5,5 +5,5 @@ app_name = "main"
 
 urlpatterns = [
     path("", show_main, name="show_main"),
-    path('search-fields/', search_fields, name='search_fields'),
+    path("search-fields/", search_fields, name="search_fields"),
 ]

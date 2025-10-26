@@ -160,7 +160,7 @@ async function refreshTable(formData) {
     }
     
     const params = new URLSearchParams(formData).toString();
-    const res = await fetch(`{% url 'dashboard_home' %}?${params}`, {
+    const res = await fetch(`{% url 'dashboard:dashboard_home' %}?${params}`, {
         headers: { 'x-requested-with': 'XMLHttpRequest' }
     });
     const data = await res.json();
@@ -178,7 +178,7 @@ async function refreshTable(formData) {
 // === Event Listener untuk Tombol "Tambahkan Lapangan" ===
 document.getElementById('openAddField').addEventListener('click', async () => {
     addFieldModal.classList.remove('hidden');
-    const res = await fetch("{% url 'add_field_ajax' %}", { 
+    const res = await fetch("{% url 'dashboard:add_field_ajax' %}", { 
         headers: {'x-requested-with': 'XMLHttpRequest'} 
     });
     const data = await res.json();
@@ -193,7 +193,7 @@ document.getElementById('openAddField').addEventListener('click', async () => {
 // === Event Listener untuk Tombol "Filter" ===
 document.getElementById('openFilterBtn').addEventListener('click', async () => {
     filterModal.classList.remove('hidden');
-    const res = await fetch("{% url 'filter_panel' %}");
+    const res = await fetch("{% url 'dashboard:filter_panel' %}");
     const data = await res.json();
     filterContent.innerHTML = data.html;
 
@@ -309,7 +309,7 @@ function attachFormEvents(mode, fieldId = null) {
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            let url = "{% url 'add_field_ajax' %}";
+            let url = "{% url 'dashboard:add_field_ajax' %}";
             if (mode === 'edit') {
                 url = `/dashboard/edit_ajax/${fieldId}/`;
             }

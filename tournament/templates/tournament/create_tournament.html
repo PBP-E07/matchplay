@@ -3,6 +3,19 @@
 <div class="max-w-md mx-auto bg-white p-6 rounded-xl shadow mt-10">
   <h1 class="text-2xl font-bold mb-6 text-center">Tambah Turnamen Baru</h1>
 
+  {% if messages %}
+    {% for message in messages %}
+      <div class="p-3 mb-3 rounded
+          {% if message.tags == 'error' %} bg-red-100 text-red-700
+          {% elif message.tags == 'success' %} bg-green-100 text-green-700
+          {% elif message.tags == 'warning' %} bg-yellow-100 text-yellow-700
+          {% else %} bg-gray-100 text-gray-700 {% endif %}">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+
   <form method="POST" class="space-y-4">
     {% csrf_token %}
 
