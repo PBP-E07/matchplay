@@ -95,9 +95,9 @@
     <div id="matches-container" class="mb-12 w-full max-w-4xl mx-auto">
         <div class="flex justify-between items-center mb-6 mt-8">
             <h2 class="text-2xl font-bold text-gray-800">Available Matches</h2>
-            <a href="{% url 'matches:match_list' %}" class="text-green-600 hover:text-green-800 font-medium">View All &rarr;</a>
+            <a href="{% url 'matches:show_matches' %}" class="text-green-600 hover:text-green-800 font-medium">View All &rarr;</a>
         </div>
-        {% include 'matches/match_list_content.html' with matches=matches user=user %}
+        {% include 'partials/match_list_content.html' with matches=matches user=user %}
     </div>
 </main>
 
