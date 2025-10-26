@@ -146,7 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
             noBlogsMessage.style.display = 'none';
         } else if (count === 0) {
             if (!noBlogsMessage) {
-                blogGrid.innerHTML = `<div id="no-blogs-message" class="col-span-1 md:col-span-2 lg:col-span-3 text-center text-gray-500 p-10 bg-white rounded-lg shadow"><p class="text-xl">Belum ada artikel.</p><p>Mulai buat satu!</p></div>`;
+                blogGrid.innerHTML = `<div id="no-blogs-message" class="col-span-1 md:col-span-2 lg:col-span-3 text-center text-gray-500 p-10 bg-white rounded-lg shadow"><p class="text-xl">Belum ada artikel.</p></div>`;
             } else {
                 noBlogsMessage.style.display = 'block';
             }
