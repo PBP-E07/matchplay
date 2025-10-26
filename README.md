@@ -31,6 +31,9 @@ Aplikasi ini dibagi menjadi beberapa modul.
 | ```equipment``` | Modul ini berfungsi untuk menjalankan fungsi peminjaman alat olahraga. | Fathan Alfahrezi |
 | ```blog``` | Modul ini berfungsi untuk menjalankan fungsi CRUD untuk blog pada website. | Geraldus Catur Gigih Wahyudi |
 
+## 🖼️ Link Desain
+- https://www.figma.com/design/rEODHOiReZtWyQa6pO914s/MatchPlay?node-id=0-1&t=ZTuwXxJZfQBtM5pH-1
+
 ## 📊 Sumber Initial Dataset
 - Dataset lapangan didapatkan dari hasil <i>scrapping dari website</i> https://ayo.co.id/sitemap/v.xml
 - Dataset customer dan perlengkapan olahraga didapat dari Dataset customer dan perlengkapan olahraga dari https://www.kaggle.com/datasets/cnezhmar/sporting-goods-store
