@@ -45,7 +45,7 @@ class Match(models.Model):
     )
 
     def __str__(self):
-        return f"{self.get_sport_display()} Match at {self.field.name} on {self.match_date}"
+        return f"Match at {self.field.name} on {self.match_date}"
 
     def save(self, *args, **kwargs):
         if self.field:
