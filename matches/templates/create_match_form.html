@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 max-w-2xl">
+    <h1 class="text-3xl font-bold mb-6 text-gray-800">Create New Match Room</h1>
+
+    <!-- Display Messages (from messages framework) -->
+    {% if messages %}
+        <div class="mb-6 space-y-2">
+            {% for message in messages %}
+                <div class="p-4 rounded-md text-sm
+                    {% if message.tags == 'success' %} bg-green-100 text-green-800 border border-green-200
+                    {% elif message.tags == 'error' %} bg-red-100 text-red-800 border border-red-200
+                    {% else %} bg-blue-100 text-blue-800 border border-blue-200 {% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <form method="post" action="{% url 'matches:create_match' %}" class="bg-white p-6 rounded-lg shadow-md space-y-4">
+        {% csrf_token %}
+
+        <!-- --- ADD THIS BLOCK to display form.non_field_errors --- -->
+        {% if form.non_field_errors %}
+            <div class="p-3 rounded-md text-sm bg-red-50 text-red-700 border border-red-200">
+                {% for error in form.non_field_errors %}
+                    <p class="font-medium">{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+        <!-- --- END BLOCK --- -->
+
+
+        {# Iterate through form fields #}
+        {% for field in form %}
+            <div>
+                <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                    {{ field.label }}
+                </label>
+
+                {# Special handling for time_slot to add container for JS #}
+                {% if field.name == 'time_slot' %}
+                    <div id="time-slot-options" class="grid grid-cols-2 gap-4 pt-2">
+                        <!-- Time slots will be loaded here by JavaScript -->
+                         <p id="loading-slots" class="text-gray-500 col-span-2 text-sm">Select a field and date to see times.</p>
+                         <p id="no-slots-message" class="text-gray-500 col-span-2 text-sm hidden">No available slots for the selected date.</p>
+                         
+                         {# This will render any existing radio buttons on form error, but JS will overwrite #}
+                         {{ field }} 
+                    </div>
+                {% else %}
+                    {{ field }} {# Renders the widget for all other fields #}
+                {% endif %}
+                
+                {% if field.help_text %}
+                    <p class="mt-1 text-xs text-gray-500">{{ field.help_text }}</p>
+                {% endif %}
+                {% if field.errors %}
+                    <div class="mt-1 text-xs text-red-600 space-y-0.5">
+                        {% for error in field.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        {% endfor %}
+
+        <div class="pt-4 flex justify-end">
+            <button type="submit" class="px-6 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition duration-150">
+                Create Match
+            </button>
+             <a href="{% url 'matches:match_list' %}" class="ml-3 px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock content %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // --- Get Elements ---
+    const dateInput = document.getElementById('id_match_date');
+    const fieldInput = document.getElementById('id_field');
+    const timeSlotContainer = document.getElementById('time-slot-options');
+    const loadingMessage = document.getElementById('loading-slots');
+    const noSlotsMessage = document.getElementById('no-slots-message');
+    
+    // Find the currently selected value (if one exists from a failed POST)
+    const form = document.querySelector('form');
+    let reRenderedSelectedValue = null;
+    const existingRadios = form.querySelectorAll('input[name="time_slot"]');
+    if (existingRadios.length > 0) {
+        const checkedRadio = form.querySelector('input[name="time_slot"]:checked');
+        if (checkedRadio) {
+            reRenderedSelectedValue = checkedRadio.value;
+        }
+    }
+
+    function fetchAndDisplaySlots(selectedFieldId, selectedDate) {
+        // Clear previous slots and show loading message
+        timeSlotContainer.innerHTML = '';
+        loadingMessage.style.display = 'block';
+        noSlotsMessage.style.display = 'none';
+        timeSlotContainer.appendChild(loadingMessage);
+
+        if (!selectedFieldId || !selectedDate) {
+            loadingMessage.textContent = 'Please select a field and a date to see available times.';
+            return;
+        }
+
+        const url = `/matches/get_slots/${selectedFieldId}/?date=${selectedDate}`;
+
+        fetch(url)
+            .then(response => {
+                if (!response.ok) { throw new Error('Network response error'); }
+                return response.json();
+            })
+            .then(data => {
+                loadingMessage.style.display = 'none';
+                timeSlotContainer.innerHTML = ''; // Clear loading message
+
+                if (data.error) {
+                    noSlotsMessage.textContent = `Error: ${data.error}`;
+                    noSlotsMessage.style.display = 'block';
+                    timeSlotContainer.appendChild(noSlotsMessage);
+                } else if (data.slots && data.slots.length > 0) {
+                    
+                    let hasAvailableSlots = false;
+                    data.slots.forEach((slot, index) => {
+                        const slotValue = `${slot.start}-${slot.end}`;
+                        const inputId = `id_time_slot_${index}`;
+
+                        const label = document.createElement('label');
+                        label.htmlFor = inputId;
+                        
+                        const input = document.createElement('input');
+                        input.type = 'radio';
+                        input.name = 'time_slot';
+                        input.value = slotValue;
+                        input.id = inputId;
+                        input.className = 'mr-2 h-4 w-4 text-green-600 border-gray-300 focus:ring-green-500';
+
+                        // Check if this was the value selected before a failed POST re-render
+                        if (slotValue === reRenderedSelectedValue) {
+                            input.checked = true;
+                        }
+
+                        let labelText = `${slot.start} - ${slot.end}`;
+
+                        if (slot.status === 'available') {
+                            hasAvailableSlots = true;
+                            label.className = 'flex items-center p-3 border rounded-lg hover:bg-gray-50 cursor-pointer text-gray-700';
+                        } else {
+                            input.disabled = true;
+                            // Add classes for disabled/greyed-out look
+                            if (slot.status === 'booked') {
+                                labelText += ' (Booked)';
+                            } else if (slot.status === 'match_created') {
+                                labelText += ' (Match Full)';
+                            }
+                            label.className = 'flex items-center p-3 border rounded-lg bg-gray-100 text-gray-400 line-through cursor-not-allowed';
+                        }
+                        
+                        label.appendChild(input);
+                        label.appendChild(document.createTextNode(labelText));
+                        timeSlotContainer.appendChild(label);
+                    });
+
+                    if (!hasAvailableSlots) {
+                        noSlotsMessage.textContent = 'All slots are unavailable for this date.';
+                        noSlotsMessage.style.display = 'block';
+                        timeSlotContainer.appendChild(noSlotsMessage);
+                    } else {
+                        noSlotsMessage.style.display = 'none';
+                    }
+
+                } else {
+                     noSlotsMessage.textContent = 'No slots available for this field and date.';
+                     noSlotsMessage.style.display = 'block';
+                     timeSlotContainer.appendChild(noSlotsMessage);
+                }
+            })
+            .catch(error => {
+                loadingMessage.style.display = 'none';
+                timeSlotContainer.innerHTML = '';
+                noSlotsMessage.textContent = 'Error loading time slots. Please try again.';
+                noSlotsMessage.style.display = 'block';
+                timeSlotContainer.appendChild(noSlotsMessage);
+                console.error('Fetch error:', error);
+            });
+    }
+
+    // --- Initial Load ---
+    const initialDate = dateInput.value;
+    const initialField = fieldInput.value;
+    if (initialDate && initialField) {
+        fetchAndDisplaySlots(initialField, initialDate);
+    } else {
+        loadingMessage.style.display = 'block';
+        loadingMessage.textContent = 'Please select a field and a date to see available times.';
+    }
+
+    // --- Event Listeners ---
+    dateInput.addEventListener('change', () => fetchAndDisplaySlots(fieldInput.value, dateInput.value));
+    fieldInput.addEventListener('change', () => fetchAndDisplaySlots(fieldInput.value, dateInput.value));
+});
+</script>
+{% endblock %}

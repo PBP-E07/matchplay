@@ -1,0 +1,7 @@
+{% for field in fields %}
+    {% include 'partials/field_card.html' with field=field %}
+{% empty %}
+    <p class="col-span-3 text-center text-gray-500 mt-4">
+        No venues found matching your search.
+    </p>
+{% endfor %}

@@ -33,13 +33,13 @@ def get_blog_form(request, pk=None):
         blog = get_object_or_404(Blog, pk=pk)
         form = BlogForm(instance=blog)
         # URL untuk form action akan ke 'blog-update'
-        form_url = reverse('main:blog-update', kwargs={'pk': pk})
+        form_url = reverse('blog:blog-update', kwargs={'pk': pk})
         form_title = "Edit Blog"
     else:
         # Ini untuk Create
         form = BlogForm()
         # URL untuk form action akan ke 'blog-create'
-        form_url = reverse('main:blog-create')
+        form_url = reverse('blog:blog-create')
         form_title = "Create New Blog"
         
     context = {

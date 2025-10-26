@@ -1,0 +1,13 @@
+<div class="grid grid-cols-3 gap-6">
+    {% for field in fields %} 
+        {% include 'partials/field_card.html' with field=field %}
+    {% empty %}
+        <p class="col-span-3 text-center text-gray-500">
+            {% if request.GET.q %}
+                No venues found matching your search.
+            {% else %}
+                There are no venues available at this time.
+            {% endif %}
+        </p>
+    {% endfor %}
+</div>

@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="max-w-md mx-auto bg-white p-6 rounded-xl shadow mt-10">
+  <h1 class="text-2xl font-bold mb-6 text-center">Tambah Turnamen Baru</h1>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="p-3 mb-3 rounded
+          {% if message.tags == 'error' %} bg-red-100 text-red-700
+          {% elif message.tags == 'success' %} bg-green-100 text-green-700
+          {% elif message.tags == 'warning' %} bg-yellow-100 text-yellow-700
+          {% else %} bg-gray-100 text-gray-700 {% endif %}">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+
+  <form method="POST" class="space-y-4">
+    {% csrf_token %}
+
+    <div>
+      <label class="block font-medium mb-1">Nama Turnamen</label>
+      <input type="text" name="name" required class="w-full border rounded p-2">
+    </div>
+
+    <div>
+      <label class="block font-medium mb-1">Jenis Olahraga</label>
+      <input type="text" name="sport_type" required class="w-full border rounded p-2">
+    </div>
+
+    <div>
+      <label class="block font-medium mb-1">Lokasi</label>
+      <input type="text" name="location" required class="w-full border rounded p-2">
+    </div>
+
+    <div>
+      <label class="block font-medium mb-1">Tanggal Mulai</label>
+      <input type="date" name="start_date" class="w-full border rounded p-2">
+    </div>
+
+    <div>
+      <label class="block font-medium mb-1">Tanggal Selesai</label>
+      <input type="date" name="end_date" class="w-full border rounded p-2">
+    </div>
+
+    <div>
+      <label class="block font-medium mb-1">Hadiah (Prize Pool)</label>
+      <input type="text" name="prize_pool" placeholder="Contoh: Rp 1.000.000" class="w-full border rounded p-2">
+    </div>
+
+    <div>
+      <label class="block font-medium mb-1">Deskripsi Turnamen</label>
+      <textarea name="description" rows="4" placeholder="Ceritakan tentang format turnamen, aturan, dan hadiah..." class="w-full border rounded p-2 resize-none"></textarea>
+    </div>
+
+    <div>
+      <label class="block font-medium mb-1">URL Gambar Banner (Opsional)</label>
+      <input type="url" name="banner_image" placeholder="https://example.com/banner.jpg" class="w-full border rounded p-2">
+    </div>
+
+    <div class="flex items-center gap-2">
+      <input type="checkbox" name="is_private" class="w-4 h-4">
+      <label class="font-medium">Jadikan turnamen ini privat</label>
+    </div>
+
+    <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded transition">
+      Simpan
+    </button>
+  </form>
+
+  <a href="{% url 'tournament:tournament_list' %}" class="block text-center text-gray-500 mt-4 hover:underline">
+    ← Kembali
+  </a>
+</div>
+{% endblock %}

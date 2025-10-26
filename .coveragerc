@@ -1,0 +1,14 @@
+[run]
+omit =
+    */migrations/*
+    */__init__.py
+    */settings.py
+    */wsgi.py
+    */asgi.py
+    manage.py
+
+[report]
+exclude_lines =
+    pragma: no cover
+    def __str__
+    if __name__ == .__main__.:
