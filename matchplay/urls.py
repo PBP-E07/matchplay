@@ -23,8 +23,4 @@ urlpatterns = [
     path('', include('authentication.urls')),
     path('dashboard/', include('dashboard.urls')),
     path('equipment/', include('equipment.urls')),
-    path('tournament/', include('tournament.urls')),
-    path('bookings/', include('bookings.urls')),
-    path('', include('blog.urls')),
-    path('matches/', include('matches.urls')),
 ]
