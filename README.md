@@ -23,6 +23,7 @@ Aplikasi ini dibagi menjadi beberapa modul.
 
 | Nama Modul | Fungsi | Pembuat |
 |------------|--------|---------|
+| ```main``` | Modul ini berfungsi untuk mengurus halaman utama website. | Valerian Hizkia Emmanuel |
 | ```authentication``` | Modul ini nantinya akan berfungsi untuk mengurus segala macam autentikasi yang terdapat di aplikasi ini. Mau itu dari pengguna biasa ataupun pemilik lapangan. Modul ini juga nantinya mengurus perizinan (authorization) yang dimiliki oleh seorang pengguna. | Seluruh Anggota |
 |```fields```| Modul ini berfungsi untuk mengurus model dari lapangan. | Faris Huda |
 |```dashboard```| Modul ini berfungsi untuk mengurus segala macam hal yang berhubungan dengan lapangan. Hal-hal ini mencakup membuat, melihat, mengubah, dan menghapus lapangan yang ada (CRUD). Modul ini juga menyimpan review dan penilaian pengguna terhadap lapangan tersebut. | Faris Huda |
