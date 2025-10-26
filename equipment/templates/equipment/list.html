@@ -1,22 +1,157 @@
 {% extends 'base.html' %}
 {% block content %}
 <div class="container mx-auto px-8 py-8">
-  <h2 class="text-lg mb-4 font-semibold">
-    Menampilkan <span class="font-bold">{{ equipments.count }}</span> Alat Tersedia
-  </h2>
+  <div class="flex justify-between items-center mb-6">
+    <h2 class="text-lg font-semibold">
+      Menampilkan <span class="font-bold">{{ equipments.count }}</span> Alat Tersedia
+    </h2>
 
+    {% if user.is_staff %}
+    <button id="openAddModal"
+      class="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition">
+      + Tambah Alat
+    </button>
+    {% endif %}
+  </div>
+
+  <!-- List alat -->
   <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
     {% for eq in equipments %}
-    <div class="bg-white rounded-xl shadow-md p-4">
+    <div class="bg-white rounded-xl shadow-md p-4 flex flex-col justify-between">
       <img src="{{ eq.image.url }}" alt="{{ eq.name }}" class="w-full h-48 object-cover rounded-md mb-3">
-      <h3 class="text-md font-bold">{{ eq.name }}</h3>
-      <p class="text-gray-700 font-semibold">{{ eq.price }}K</p>
-      <p class="text-gray-500 text-sm">Tersedia {{ eq.stock }} barang</p>
-      <button class="mt-2 bg-green-400 text-white px-4 py-1 rounded-md hover:bg-green-500 transition">
-        Sewa
-      </button>
+      <div>
+        <h3 class="text-md font-bold">{{ eq.name }}</h3>
+        <p class="text-gray-700 font-semibold">{{ eq.price }}K</p>
+        <p class="text-gray-500 text-sm">Tersedia {{ eq.stock }} barang</p>
+      </div>
+
+      <div class="flex gap-2 mt-3">
+        <button class="flex-1 bg-green-500 text-white font-semibold px-4 py-2 rounded-md hover:bg-green-600 transition">
+          Sewa
+        </button>
+
+        {% if user.is_staff %}
+        <button data-id="{{ eq.id }}" class="editBtn bg-yellow-400 text-white px-3 rounded-md hover:bg-yellow-500">
+          ✏️
+        </button>
+        <button data-id="{{ eq.id }}" class="deleteBtn bg-red-500 text-white px-3 rounded-md hover:bg-red-600">
+          🗑️
+        </button>
+        {% endif %}
+      </div>
     </div>
     {% endfor %}
   </div>
 </div>
+
+<!-- Modal Tambah -->
+<div id="addModal" class="fixed inset-0 bg-black bg-opacity-40 hidden justify-center items-center z-50">
+  <div class="bg-white rounded-xl shadow-lg w-96 p-6">
+    <h2 class="text-lg font-bold mb-4">Tambah Alat Baru</h2>
+    <form id="addEquipmentForm" enctype="multipart/form-data">
+      {% csrf_token %}
+      <input type="text" name="name" placeholder="Nama Alat" class="w-full mb-3 border rounded p-2" required>
+      <input type="number" name="quantity" placeholder="Jumlah" class="w-full mb-3 border rounded p-2" required>
+      <input type="number" name="price_per_hour" placeholder="Harga (per jam)" class="w-full mb-3 border rounded p-2" required>
+      <textarea name="description" placeholder="Deskripsi" class="w-full mb-3 border rounded p-2"></textarea>
+      <input type="file" name="image" accept="image/*" class="w-full mb-3 border rounded p-2" required>
+
+      <div class="flex justify-end gap-3">
+        <button type="button" id="closeModal" class="px-3 py-1 bg-gray-300 rounded-md hover:bg-gray-400">Batal</button>
+        <button type="submit" class="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600">Tambah</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Edit -->
+<div id="editModal" class="fixed inset-0 bg-black bg-opacity-40 hidden justify-center items-center">
+  <div class="bg-white rounded-xl shadow-lg w-96 p-6">
+    <h2 class="text-lg font-bold mb-4">Edit Alat</h2>
+    <form id="editEquipmentForm" enctype="multipart/form-data">
+      {% csrf_token %}
+      <input type="hidden" name="id" id="edit_id">
+      <input type="text" name="name" id="edit_name" placeholder="Nama Alat" class="w-full mb-3 border rounded p-2" required>
+      <input type="number" name="quantity" id="edit_quantity" placeholder="Jumlah" class="w-full mb-3 border rounded p-2" required>
+      <input type="number" name="price_per_hour" id="edit_price" placeholder="Harga (per jam)" class="w-full mb-3 border rounded p-2" required>
+      <textarea name="description" id="edit_description" placeholder="Deskripsi" class="w-full mb-3 border rounded p-2"></textarea>
+      <input type="file" name="image" accept="image/*" class="w-full mb-3 border rounded p-2">
+
+      <div class="flex justify-end gap-3">
+        <button type="button" id="closeEditModal" class="px-3 py-1 bg-gray-300 rounded-md hover:bg-gray-400">Batal</button>
+        <button type="submit" class="px-3 py-1 bg-yellow-500 text-white rounded-md hover:bg-yellow-600">Simpan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+// buka modal tambah
+document.getElementById("openAddModal")?.addEventListener("click", () => {
+  document.getElementById("addModal").classList.remove("hidden");
+  document.getElementById("addModal").classList.add("flex");
+});
+document.getElementById("closeModal")?.addEventListener("click", () => {
+  document.getElementById("addModal").classList.add("hidden");
+});
+
+// submit tambah alat
+document.getElementById("addEquipmentForm")?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const formData = new FormData(e.target);
+  const res = await fetch("{% url 'equipment:add_equipment' %}", {
+    method: "POST",
+    headers: { "X-CSRFToken": "{{ csrf_token }}" },
+    body: formData
+  });
+  if (res.ok) location.reload();
+});
+
+// buka modal edit
+document.querySelectorAll(".editBtn").forEach(btn => {
+  btn.addEventListener("click", async () => {
+    const id = btn.dataset.id;
+    const res = await fetch(`/equipment/${id}/detail/`);
+    const data = await res.json();
+    document.getElementById("edit_id").value = data.id;
+    document.getElementById("edit_name").value = data.name;
+    document.getElementById("edit_quantity").value = data.quantity;
+    document.getElementById("edit_price").value = data.price_per_hour;
+    document.getElementById("edit_description").value = data.description;
+    document.getElementById("editModal").classList.remove("hidden");
+    document.getElementById("editModal").classList.add("flex");
+  });
+});
+
+document.getElementById("closeEditModal")?.addEventListener("click", () => {
+  document.getElementById("editModal").classList.add("hidden");
+});
+
+// submit edit
+document.getElementById("editEquipmentForm")?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const formData = new FormData(e.target);
+  const id = document.getElementById("edit_id").value;
+  const res = await fetch(`/equipment/${id}/edit/`, {
+    method: "POST",
+    headers: { "X-CSRFToken": "{{ csrf_token }}" },
+    body: formData
+  });
+  if (res.ok) location.reload();
+});
+
+// hapus alat
+document.querySelectorAll(".deleteBtn").forEach(btn => {
+  btn.addEventListener("click", async () => {
+    const id = btn.dataset.id;
+    if (confirm("Yakin mau hapus alat ini?")) {
+      const res = await fetch(`/equipment/${id}/delete/`, {
+        method: "POST",
+        headers: { "X-CSRFToken": "{{ csrf_token }}" }
+      });
+      if (res.ok) location.reload();
+    }
+  });
+});
+</script>
 {% endblock %}
