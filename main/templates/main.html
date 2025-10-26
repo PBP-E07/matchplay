@@ -69,7 +69,7 @@
                 id="btn-find-venues"
                 class="flex items-center justify-center gap-2.5 px-6 py-2.5 rounded-full text-sm font-semibold duration-200"
             >
-                <img src="{% static 'images/location.svg' %}">    
+                <img src="{% static 'images/location.svg' %}">     
 
                 Find Venues
             </button>
@@ -92,12 +92,12 @@
         {% include 'partials/field_list_content.html' with fields=fields %}
     </div>
 
-    <div class="mb-12">
-        <div class="flex justify-between items-center mb-6">
+    <div id="matches-container" class="mb-12 w-full max-w-4xl mx-auto">
+        <div class="flex justify-between items-center mb-6 mt-8">
             <h2 class="text-2xl font-bold text-gray-800">Available Matches</h2>
-            <a href="{% url 'matches:show_matches' %}" class="text-green-600 hover:text-green-800 font-medium">View All &rarr;</a>
+            <a href="{% url 'matches:match_list' %}" class="text-green-600 hover:text-green-800 font-medium">View All &rarr;</a>
         </div>
-        {% include 'partials/match_list_content.html' with matches=matches user=user %}
+        {% include 'matches/match_list_content.html' with matches=matches user=user %}
     </div>
 </main>
 
@@ -126,6 +126,7 @@
             } else if (view === "matches") {
                 btnJoinMatches.classList.add(...activeClasses);
                 btnJoinMatches.classList.remove(...inactiveClasses);
+
                 btnFindVenues.classList.add(...inactiveClasses);
                 btnFindVenues.classList.remove(...activeClasses);
 
@@ -141,9 +142,9 @@
             const query = searchInput.value;
 
             if (!fieldsContainer.classList.contains("hidden")) {
-                performSearch(query);
+                performFieldSearch(query);
             } else {
-                console.log("Search for matches (not implemented)");
+                performMatchSearch(query);
             }
         });
 
@@ -153,7 +154,7 @@
             }
         });
 
-        function performSearch(query) {
+        function performFieldSearch(query) {
             fieldsContainer.innerHTML =
                 '<p class="col-span-3 text-center text-gray-500">Loading...</p>';
 
@@ -172,6 +173,30 @@
                 .catch((error) => {
                     console.error("Error fetching search results:", error);
                     fieldsContainer.innerHTML =
+                        '<p class="col-span-3 text-center text-red-500">Error loading results.</p>';
+                });
+        }
+        
+        // This is the new function to search matches
+        function performMatchSearch(query) {
+            matchesContainer.innerHTML =
+                '<p class="col-span-3 text-center text-gray-500">Loading...</p>';
+
+            const url = `/search_matches/?q=${encodeURIComponent(query)}`;
+
+            fetch(url)
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error("Network response was not ok");
+                    }
+                    return response.text();
+                })
+                .then((html) => {
+                    matchesContainer.innerHTML = html;
+                })
+                .catch((error) => {
+                    console.error("Error fetching match results:", error);
+                    matchesContainer.innerHTML =
                         '<p class="col-span-3 text-center text-red-500">Error loading results.</p>';
                 });
         }
