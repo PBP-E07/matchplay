@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from fields.models import Field
+from matches.models import Match
 from .models import Booking
 from .forms import BookingForm
 from django.contrib import messages
@@ -31,6 +32,16 @@ def get_slots_ajax(request, field_id):
         Booking.objects.filter(field_id=field_id, booking_date=booking_date).values_list("start_time", flat=True)
     )
 
+    match_times = set(
+        Match.objects.filter(
+            field_id=field_id, 
+            match_date=booking_date, 
+            status__in=["Pending", "Confirmed"]
+        ).values_list("start_time", flat=True)
+    )
+    
+    unavailable_times = booked_times.union(match_times)
+
     slots = [
         (datetime.time(10, 0), datetime.time(11, 0)),
         (datetime.time(11, 0), datetime.time(12, 0)),
@@ -43,6 +54,8 @@ def get_slots_ajax(request, field_id):
     now_time = timezone.localtime(timezone.now()).time()
 
     for start, end in slots:
+        is_unavailable = start in unavailable_times
+
         is_booked = start in booked_times
 
         is_past = (booking_date < today) or (booking_date == today and start < now_time)
@@ -52,8 +65,11 @@ def get_slots_ajax(request, field_id):
 
         if is_past:
             status = "past"
-        elif is_booked:
-            status = "booked"
+        elif is_unavailable:
+            if start in booked_times:
+                status = "booked"
+            else:
+                status = "match_created"
 
         slots_with_status.append({
             "start": start.strftime("%H:%M"),
