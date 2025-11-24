@@ -20,7 +20,10 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
+    # Admin
     path('admin/', admin.site.urls),
+
+    # Jalur Web
     path('', include('main.urls')),
     path('', include('authentication.urls')),
     path('dashboard/', include('dashboard.urls')),
@@ -29,6 +32,9 @@ urlpatterns = [
     path('tournament/', include('tournament.urls')),
     path('bookings/', include('bookings.urls')),
     path('blog/', include('blog.urls')),
+
+    # Jalur API
+    path('api/fields/', include('fields.urls_api')),
 ]
 
 if settings.DEBUG:
