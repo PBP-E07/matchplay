@@ -106,7 +106,7 @@ document.getElementById("addEquipmentForm")?.addEventListener("submit", async (e
     headers: { "X-CSRFToken": "{{ csrf_token }}" },
     body: formData
   });
-  if (res.ok) location.reload();
+  if (res.ok) location.reload()
 });
 
 // buka modal edit
