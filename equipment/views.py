@@ -6,9 +6,15 @@ from django.contrib.auth.decorators import user_passes_test
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
+from django.core.exceptions import PermissionDenied
+from django.http import HttpResponse
+from django.core import serializers
+import json
 
 def is_admin(user):
-    return user.is_staff  # bisa juga ganti ke user.is_superuser
+    if user.is_staff: 
+        return True
+    raise PermissionDenied 
 
 @login_required
 def equipment_list(request):
@@ -19,6 +25,7 @@ def equipment_detail(request, id):
     equipment = get_object_or_404(Equipment, id=id)
     return render(request, 'equipment/detail.html', {'equipment': equipment})
 
+@csrf_exempt
 @require_POST
 @login_required
 @user_passes_test(lambda u: u.is_staff)
@@ -81,3 +88,30 @@ def equipment_json_detail(request, id):
         'description': equipment.description or ''
     })
 
+def show_json(request):
+    data = Equipment.objects.all()
+    return HttpResponse(serializers.serialize("json", data), content_type="application/json")
+
+@csrf_exempt
+def create_equipment_flutter(request):
+    if request.method == 'POST':
+        try:
+            # 1. Baca data dari JSON body (karena Flutter kirim JSON)
+            data = json.loads(request.body)
+            
+            # 2. Bikin object baru (TANPA field 'user' karena di model gak ada)
+            new_equipment = Equipment.objects.create(
+                name=data["name"],
+                quantity=int(data["quantity"]),
+                price_per_hour=float(data["price_per_hour"]),
+                description=data["description"],
+                # Image kita skip dulu (biarkan null) biar gak ribet error upload
+            )
+            
+            new_equipment.save()
+
+            return JsonResponse({"status": "success"}, status=200)
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=500)
+            
+    return JsonResponse({"status": "error", "message": "Method not allowed"}, status=401)
