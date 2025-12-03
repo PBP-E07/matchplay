@@ -21,7 +21,10 @@ from django.conf.urls.static import static
 from django.views.generic import TemplateView
 
 urlpatterns = [
+    # Admin
     path('admin/', admin.site.urls),
+
+    # Jalur Web
     path('', include('main.urls')),
     path('', include('authentication.urls')),
     path('dashboard/', include('dashboard.urls')),
@@ -30,6 +33,7 @@ urlpatterns = [
     path('tournament/', include('tournament.urls')),
     path('bookings/', include('bookings.urls')),
     path('blog/', include('blog.urls')),
+    path('api/fields/', include('fields.urls_api')),
     path('sitemap.xml', TemplateView.as_view(template_name='sitemap.xml', content_type='text/xml')),
 ]
 
