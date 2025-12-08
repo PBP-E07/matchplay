@@ -1,0 +1,24 @@
+[
+    {
+      "model": "equipment.equipment",
+      "pk": 2,
+      "fields": {
+        "name": "Raket Tenis Wilson",
+        "quantity": 5,
+        "price_per_hour": "50.000,00",
+        "description": "Raket pro, ringan dan kuat.",
+        "image": "https://www.static-src.com/wcsstore/Indraprastha/images/catalog/full/catalog-image/114/MTA-159628398/wilson_raket-tenis-wilson-impact-2024-beginner-tennis-racket-wilson-original_full01.jpg"
+      }
+    },
+    {
+      "model": "equipment.equipment",
+      "pk": 3,
+      "fields": {
+        "name": "Sepatu Futsal Nike",
+        "quantity": 3,
+        "price_per_hour": "30.000,00",
+        "description": "Ukuran 40-43 tersedia.",
+        "image": "https://img.ncrsport.com/img/storage/large/AT7975-001-1.jpg"
+      }
+    }
+  ]
