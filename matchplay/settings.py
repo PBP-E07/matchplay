@@ -31,6 +31,9 @@ PRODUCTION = os.getenv('PRODUCTION', 'False').lower == 'true'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
+csrf_trusted_origins = ['http://localhost:57383'] 
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'valerian-hizkia-matchplay.pbp.cs.ui.ac.id']
 
@@ -54,6 +57,7 @@ INSTALLED_APPS = [
     'bookings',
     'tournament',
     'matches',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -65,6 +69,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware', 
+    'django.middleware.common.CommonMiddleware',
 ]
 
 ROOT_URLCONF = 'matchplay.urls'
