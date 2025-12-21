@@ -31,9 +31,6 @@ PRODUCTION = os.getenv('PRODUCTION', 'False').lower == 'true'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOW_CREDENTIALS = True
-csrf_trusted_origins = ['http://localhost:57383'] 
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'valerian-hizkia-matchplay.pbp.cs.ui.ac.id', '10.0.2.2']
 
@@ -71,7 +68,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'django.middleware.common.CommonMiddleware',
 ]
 
 ROOT_URLCONF = 'matchplay.urls'
@@ -143,9 +139,10 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LOGIN_URL = '/login/'
 
-CORS_ALLOW_ALL_ORIGINS = True
-
-CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000"
+]
 
 CSRF_TRUSTED_ORIGINS = [
     "https://valerian-hizkia-matchplay.pbp.cs.ui.ac.id",
@@ -164,7 +161,6 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
