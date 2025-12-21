@@ -14,5 +14,7 @@ urlpatterns = [
     path('<int:id>/delete/', views.delete_equipment, name='delete_equipment'),
     path('json/', show_json, name='show_json'),
     path('create-flutter/', create_equipment_flutter, name='create_equipment_flutter'),
+    path('edit-flutter/<int:id>/', views.edit_equipment_flutter, name='edit_equipment_flutter'),
+    path('delete-flutter/<int:id>/', views.delete_equipment_flutter, name='delete_equipment_flutter'),
 ]
 

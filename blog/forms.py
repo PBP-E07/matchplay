@@ -5,7 +5,6 @@ from .models import Blog
 class BlogForm(forms.ModelForm):
     class Meta:
         model = Blog
-        # Fields sesuai permintaanmu
         fields = ['title', 'author', 'summary', 'content', 'thumbnail']
         widgets = {
             'title': forms.TextInput(attrs={

@@ -115,3 +115,42 @@ def create_equipment_flutter(request):
             return JsonResponse({"status": "error", "message": str(e)}, status=500)
             
     return JsonResponse({"status": "error", "message": "Method not allowed"}, status=401)
+
+@csrf_exempt
+@require_POST
+def edit_equipment_flutter(request, id):
+    if not request.user.is_authenticated:
+        return JsonResponse({"status": "error", "message": "Login required"}, status=401)
+    
+    if not request.user.is_staff: # Hanya admin yang boleh edit
+        return JsonResponse({"status": "error", "message": "Permission denied"}, status=403)
+
+    try:
+        equipment = get_object_or_404(Equipment, pk=id)
+        data = json.loads(request.body)
+
+        equipment.name = data['name']
+        equipment.quantity = int(data['quantity'])
+        equipment.price_per_hour = float(data['price_per_hour'])
+        equipment.description = data['description']
+        equipment.save()
+
+        return JsonResponse({"status": "success", "message": "Equipment updated!"}, status=200)
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+@csrf_exempt
+@require_POST
+def delete_equipment_flutter(request, id):
+    if not request.user.is_authenticated:
+        return JsonResponse({"status": "error", "message": "Login required"}, status=401)
+    
+    if not request.user.is_staff:
+        return JsonResponse({"status": "error", "message": "Permission denied"}, status=403)
+
+    try:
+        equipment = get_object_or_404(Equipment, pk=id)
+        equipment.delete()
+        return JsonResponse({"status": "success", "message": "Equipment deleted!"}, status=200)
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
