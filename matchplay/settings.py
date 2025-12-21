@@ -59,7 +59,6 @@ INSTALLED_APPS = [
     'bookings',
     'tournament',
     'matches',
-    'corsheaders',
 ]
 
 MIDDLEWARE = [
