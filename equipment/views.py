@@ -170,12 +170,8 @@ def create_equipment_flutter(request):
 @csrf_exempt
 def book_equipment(request):
     if request.method == 'POST':
-        # 1. CEK LOGIN MANUAL (Agar balikin JSON, bukan redirect HTML)
         if not request.user.is_authenticated:
-            return JsonResponse({
-                'status': 'error',
-                'message': 'Sesi login habis atau lo belum login di aplikasi, Boy!'
-            }, status=403)
+            return JsonResponse({'status': 'error', 'message': 'Sesi habis, login lagi bro!'}, status=403)
 
         try:
             data = json.loads(request.body)
@@ -184,16 +180,23 @@ def book_equipment(request):
             slot = data['slot']     
             requested_qty = int(data.get('quantity', 1))
             
-            # 2. PARSE WAKTU (Sesuaikan pemisah '-' dan ':' dari Flutter lo)
-            # Contoh slot dari Flutter: "06:00 - 07:00" atau "06:00-07:00"
-            clean_slot = slot.replace(" ", "") # Hilangin spasi biar jadi "06:00-07:00"
+            # --- FIX DISINI ---
+            # 1. Hapus spasi dan ganti titik (.) jadi titik dua (:) supaya konsisten
+            clean_slot = slot.replace(" ", "").replace(".", ":") 
+            
+            # 2. Split jam awal dan akhir
             start_h, end_h = clean_slot.split('-')
             
-            # Gunakan format %H:%M (pake titik dua) sesuai kiriman Flutter
+            # 3. Parse waktu (sekarang aman pakai %H:%M karena sudah di-replace tadi)
             start_time = make_aware(datetime.strptime(f"{date_str} {start_h}", "%Y-%m-%d %H:%M"))
-            end_time = make_aware(datetime.strptime(f"{date_str} {end_h}", "%Y-%m-%d %H:%M"))
+            
+            # Handle jam 00:00 atau 24:00 agar tidak error (pindah ke hari berikutnya)
+            if end_h in ["00:00", "24:00", "00.00"]:
+                end_time = start_time + timezone.timedelta(hours=1)
+            else:
+                end_time = make_aware(datetime.strptime(f"{date_str} {end_h}", "%Y-%m-%d %H:%M"))
 
-            # 3. CEK STOK (Overlap logic)
+            # --- LOGIKA STOK ---
             rented_sum = Rental.objects.filter(
                 equipment=eq,
                 start_time__lt=end_time,
@@ -201,13 +204,12 @@ def book_equipment(request):
             ).aggregate(total=Sum('quantity_rented'))['total'] or 0
 
             if rented_sum + requested_qty > eq.quantity:
-                sisa = eq.quantity - rented_sum
                 return JsonResponse({
                     'status': 'error', 
-                    'message': f'Waduh, jam ini cuma sisa {sisa} alat.' # Flutter baca key 'message'
+                    'message': f'Stok sisa {eq.quantity - rented_sum}'
                 }, status=400)
 
-            # 4. SIMPAN RENTAL
+            # SIMPAN
             Rental.objects.create(
                 equipment=eq,
                 renter_name=request.user.username,
@@ -216,13 +218,11 @@ def book_equipment(request):
                 end_time=end_time
             )
             
-            # PENTING: Jangan lupa update stok fisik alat kalau di model lo stoknya absolut
-            # eq.quantity -= requested_qty
-            # eq.save()
-
             return JsonResponse({'status': 'success'}, status=200)
 
         except Exception as e:
+            # SANGAT PENTING: Print error di terminal biar lo tau error aslinya apa
+            print(f"DEBUG ERROR BOOKING: {e}") 
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
     
     return JsonResponse({'status': 'error', 'message': 'Method not allowed'}, status=405)
