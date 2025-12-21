@@ -168,9 +168,15 @@ def create_equipment_flutter(request):
     return JsonResponse({"status": "error", "message": "Method not allowed"}, status=401)
 
 @csrf_exempt
-@login_required
 def book_equipment(request):
     if request.method == 'POST':
+        # 1. CEK LOGIN MANUAL (Agar balikin JSON, bukan redirect HTML)
+        if not request.user.is_authenticated:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Sesi login habis atau lo belum login di aplikasi, Boy!'
+            }, status=403)
+
         try:
             data = json.loads(request.body)
             eq = get_object_or_404(Equipment, id=data['eq_id'])
@@ -178,17 +184,19 @@ def book_equipment(request):
             slot = data['slot']     
             requested_qty = int(data.get('quantity', 1))
             
-            # 1. PARSE WAKTU DULU (Penting: harus sebelum filter!)
-            start_h, end_h = slot.split('-')
+            # 2. PARSE WAKTU (Sesuaikan pemisah '-' dan ':' dari Flutter lo)
+            # Contoh slot dari Flutter: "06:00 - 07:00" atau "06:00-07:00"
+            clean_slot = slot.replace(" ", "") # Hilangin spasi biar jadi "06:00-07:00"
+            start_h, end_h = clean_slot.split('-')
             
-            # Pakai make_aware biar sinkron dengan timezone Django lo
-            start_time = make_aware(datetime.strptime(f"{date_str} {start_h}", "%Y-%m-%d %H.%M"))
-            end_time = make_aware(datetime.strptime(f"{date_str} {end_h}", "%Y-%m-%d %H.%M"))
+            # Gunakan format %H:%M (pake titik dua) sesuai kiriman Flutter
+            start_time = make_aware(datetime.strptime(f"{date_str} {start_h}", "%Y-%m-%d %H:%M"))
+            end_time = make_aware(datetime.strptime(f"{date_str} {end_h}", "%Y-%m-%d %H:%M"))
 
-            # 2. CEK STOK (Sekarang end_time sudah ada nilainya)
+            # 3. CEK STOK (Overlap logic)
             rented_sum = Rental.objects.filter(
                 equipment=eq,
-                start_time__lt=end_time, # end_time dipanggil di sini
+                start_time__lt=end_time,
                 end_time__gt=start_time
             ).aggregate(total=Sum('quantity_rented'))['total'] or 0
 
@@ -196,10 +204,10 @@ def book_equipment(request):
                 sisa = eq.quantity - rented_sum
                 return JsonResponse({
                     'status': 'error', 
-                    'error': f'Waduh, jam ini cuma sisa {sisa} alat.'
+                    'message': f'Waduh, jam ini cuma sisa {sisa} alat.' # Flutter baca key 'message'
                 }, status=400)
 
-            # 3. SIMPAN RENTAL
+            # 4. SIMPAN RENTAL
             Rental.objects.create(
                 equipment=eq,
                 renter_name=request.user.username,
@@ -207,10 +215,17 @@ def book_equipment(request):
                 start_time=start_time,
                 end_time=end_time
             )
-            return JsonResponse({'status': 'success'})
+            
+            # PENTING: Jangan lupa update stok fisik alat kalau di model lo stoknya absolut
+            # eq.quantity -= requested_qty
+            # eq.save()
+
+            return JsonResponse({'status': 'success'}, status=200)
 
         except Exception as e:
-            return JsonResponse({'status': 'error', 'error': str(e)}, status=500)
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    
+    return JsonResponse({'status': 'error', 'message': 'Method not allowed'}, status=405)
     
 def show_json(request):
     data = Equipment.objects.all()
