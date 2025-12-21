@@ -1,6 +1,7 @@
 from django.db.models import Q, Avg
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.authentication import SessionAuthentication
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
@@ -8,6 +9,11 @@ from django.shortcuts import get_object_or_404
 from fields.models import Field, Facility
 from fields.serializers import FieldSerializer, FacilitySerializer
 
+# ==== CUSTOM CLASS UNTUK BYPASS CSRF =====
+class CsrfExemptSessionAuthentication(SessionAuthentication):
+    def enforce_csrf(self, request):
+        return None # Matikan cek CSRF
+    
 # ===== HELPER METHOD =====
 
 # Filtering dan Searching
@@ -97,7 +103,8 @@ def handle_validation_and_save(serializer, success_status=status.HTTP_200_OK):
 # ===== VIEWS METHOD =====
 
 @api_view(['GET', 'POST'])
-# @permission_classes([IsAuthenticated])
+@authentication_classes([CsrfExemptSessionAuthentication])
+@permission_classes([IsAuthenticated])
 def field_list_api(request):
     """
     GET: Tampilkan semua fields (JSON)
@@ -128,53 +135,56 @@ def field_list_api(request):
 
     # POST hanya boleh diakses oleh admin (is_staff)
     elif request.method == 'POST':
-        # if not request.user.is_staff:
-        #      return Response(
-        #         {"status": "error", "message": "Hanya admin yang boleh menambahkan data!"},
-        #         status=status.HTTP_403_FORBIDDEN
-        #     )
+        if not request.user.is_staff:
+             return Response(
+                {"status": "error", "message": "Hanya admin yang boleh menambahkan data!"},
+                status=status.HTTP_403_FORBIDDEN
+            )
         serializer = FieldSerializer(data=request.data)
         return handle_validation_and_save(serializer, success_status=status.HTTP_201_CREATED)
 
 
-@api_view(['GET', 'PATCH', 'DELETE'])
-# @permission_classes([IsAuthenticated])
+@api_view(['GET', 'POST'])
+@authentication_classes([CsrfExemptSessionAuthentication])
+@permission_classes([IsAuthenticated])
 def field_detail_api(request, pk):
     """
     GET: Ambil satu field detail
-    PATCH: Update field
-    DELETE: Hapus field
+    POST: Update field (atau Delete jika ada _method='DELETE')
     """
     field = get_object_or_404(Field, pk=pk)
 
-    # GET boleh diakses oleh user biasa (Sudah login)
+    # 1. GET (Read)
     if request.method == 'GET':
         serializer = FieldSerializer(field)
         return Response(serializer.data)
 
-    # Cek apakah user adalah admin (is_staff) sebelum lanjut ke PATCH atau DELETE
-    # if not request.user.is_staff:
-    #     return Response(
-    #         {"status": "error", "message": "Hanya admin yang boleh mengubah/menghapus data."},
-    #         status=status.HTTP_403_FORBIDDEN
-    #     )
+    # 2. POST (Update / Delete)
+    elif request.method == 'POST':
+        # Cek Authorisasi Admin
+        if not request.user.is_staff:
+            return Response(
+                {"status": "error", "message": "Hanya admin yang boleh mengubah/menghapus data."},
+                status=status.HTTP_403_FORBIDDEN
+            )
 
-    # PATCH hanya boleh diakses oleh admin (is_staff)
-    if request.method == 'PATCH':
+        # A. Logika DELETE (Cek flag _method)
+        if request.data.get('_method') == 'DELETE':
+            field.delete()
+            return Response({
+                "status": "success", 
+                "message": "Data berhasil dihapus"
+            }, status=status.HTTP_200_OK) # Gunakan 200 OK agar mudah ditangkap Flutter
+
+        # B. Logika UPDATE (Default POST)
+        # partial=True membuat POST ini berperilaku seperti PATCH (hanya update field yang dikirim)
         serializer = FieldSerializer(field, data=request.data, partial=True)
         return handle_validation_and_save(serializer)
-
-    # DELETE hanya boleh diakses oleh admin (is_staff)
-    elif request.method == 'DELETE':
-        field.delete()
-        return Response({
-            "status": "success", 
-            "message": "Data berhasil dihapus"
-        }, status=status.HTTP_204_NO_CONTENT)
     
 
 @api_view(['GET'])
-# @permission_classes([IsAuthenticated])
+@authentication_classes([CsrfExemptSessionAuthentication])
+@permission_classes([IsAuthenticated])
 def facility_list_api(request):
     """
     GET: Tampilkan semua fasilitas (untuk pilihan di form)
