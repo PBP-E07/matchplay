@@ -102,3 +102,30 @@ def get_occupied_slots(request):
     else:
         return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
     
+@csrf_exempt
+def join_match_api(request, match_id):
+    if request.method == "POST":
+        try:
+            match = Match.objects.get(id=match_id)
+            
+            if match.current_players >= match.max_players:
+                return JsonResponse(
+                    {"status": "error", "message": "Match is full!"}, 
+                    status=400
+                )
+
+            match.current_players += 1
+            match.save()
+            
+            return JsonResponse(
+                {"status": "success", "message": "Successfully joined the match!"}, 
+                status=200
+            )
+            
+        except Match.DoesNotExist:
+            return JsonResponse(
+                {"status": "error", "message": "Match not found"}, 
+                status=404
+            )
+            
+    return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
