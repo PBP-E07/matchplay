@@ -34,6 +34,7 @@ urlpatterns = [
     path('bookings/', include('bookings.urls')),
     path('blog/', include('blog.urls')),
     path('api/fields/', include('fields.urls_api')),
+    path('api/matches/', include('matches_flutter.urls')),
     path('sitemap.xml', TemplateView.as_view(template_name='sitemap.xml', content_type='text/xml')),
 ]
 

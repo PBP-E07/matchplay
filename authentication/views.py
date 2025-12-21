@@ -1,3 +1,4 @@
+import json
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect, render
 from django.contrib.auth import login, logout, authenticate
@@ -62,53 +63,61 @@ def logout_json(request):
         logout(request)
 
         return JsonResponse({
+            "status": True,
             "username": username,
             "message": "Logged out successfully"
         }, status=200)
     except:
         return JsonResponse({
+            "status": False,
             "message": "Logout failed"
         }, status=401)
 
 @csrf_exempt
 def login_json(request):
-    username = request.POST["username"]
-    password = request.POST["password"]
+    username = request.POST['username']
+    password = request.POST['password']
     user = authenticate(username=username, password=password)
-
     if user is not None:
         if user.is_active:
             login(request, user)
-
+            # Login status successful.
             return JsonResponse({
                 "username": user.username,
-                "message": "Login successful"
+                "status": True,
+                "message": "Login successful!",
+                "is_staff": user.is_staff
             }, status=200)
-        
         else:
             return JsonResponse({
-                "message": "Login failed, account is disabled"
+                "status": False,
+                "message": "Login failed, account is disabled."
             }, status=401)
 
     else:
         return JsonResponse({
-            "message": "Login failed, please check your username or password"
+            "status": False,
+            "message": "Login failed, please check your username or password."
         }, status=401)
 
 @csrf_exempt
 def register_json(request):
     if request.method == "POST":
-        username = request.POST["username"]
-        password1 = request.POST["password"]
-        password2 = request.POST["password"]
+        data = json.loads(request.body)
+
+        username = data["username"]
+        password1 = data["password1"]
+        password2 = data["password2"]
 
         if password1 != password2:
             return JsonResponse({
+                "status": "failed",
                 "message": "Passwords do not match"
             }, status=400)
         
         if User.objects.filter(username=username).exists():
             return JsonResponse({
+                "status": "failed",
                 "message": "Username already exists"
             }, status=400)
         
@@ -117,11 +126,13 @@ def register_json(request):
         user.save()
         
         return JsonResponse({
+            "status": "success",
             "username": user.username,
             "message": "User created successfully"
         }, status=200)
     
     else:
         return JsonResponse({
+            "status": "failed",
             "message": "Invalid request method"
         }, status=400)

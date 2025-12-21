@@ -5,5 +5,6 @@ app_name = 'api_fields'
 
 urlpatterns = [
     path('', views_api.field_list_api, name='list'),
+    path('facilities/', views_api.facility_list_api, name='facility-list'),
     path('<int:pk>/', views_api.field_detail_api, name='detail'),
 ]
