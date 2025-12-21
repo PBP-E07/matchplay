@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'bookings',
     'tournament',
     'matches',
+    'matches_flutter',
 ]
 
 MIDDLEWARE = [
