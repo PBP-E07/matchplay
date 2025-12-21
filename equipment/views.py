@@ -236,3 +236,46 @@ def my_bookings(request):
     # Mengambil data sewa user yang login, urutkan dari yang terbaru
     bookings = Rental.objects.filter(renter_name=request.user.username).order_by('-start_time')
     return render(request, 'equipment/my_bookings.html', {'bookings': bookings})
+
+@csrf_exempt
+def edit_equipment_flutter(request, id):
+    if request.method != 'POST':
+        return JsonResponse({"status": "error"}, status=400)
+
+    try:
+        data = json.loads(request.body)
+        equipment = Equipment.objects.get(pk=id)
+
+        if "name" in data:
+            equipment.name = data["name"]
+
+        if "price" in data:
+            equipment.price_per_hour = float(data["price"])
+
+        if "stock" in data:
+            equipment.quantity = int(data["stock"])
+
+        if "description" in data:
+            equipment.description = data["description"]
+
+        if "image" in data:
+            equipment.image = data["image"]
+
+        equipment.save()
+        return JsonResponse({"status": "success"}, status=200)
+
+    except Equipment.DoesNotExist:
+        return JsonResponse({"status": "error", "message": "Alat tidak ditemukan"}, status=404)
+
+    except Exception as e:
+        print("EDIT EQUIPMENT ERROR:", e)
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+
+@csrf_exempt
+def delete_equipment_flutter(request, id):
+    if request.method == 'POST':
+        equipment = Equipment.objects.get(pk=id)
+        equipment.delete()
+        return JsonResponse({"status": "success"}, status=200)
+    return JsonResponse({"status": "error"}, status=400)
