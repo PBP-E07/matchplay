@@ -22,4 +22,5 @@ urlpatterns = [
     path('proxy-image/', views.proxy_image, name='proxy_image'),
     path('edit-flutter/<uuid:pk>/', views.edit_blog_flutter, name='edit_blog_flutter'),
     path('delete-flutter/<uuid:pk>/', views.delete_blog_flutter, name='delete_blog_flutter'),
+    path('increment-view/<uuid:blog_id>/', views.increment_view_counter, name='increment_view_counter'),
 ]

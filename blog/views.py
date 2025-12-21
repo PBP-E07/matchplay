@@ -44,6 +44,7 @@ def blog_list_json(request):
             'created_at': b.created_at.isoformat() if b.created_at else None,
             'blog_views': b.blog_views,
             'url': b.get_absolute_url(),
+            'category': b.category,
         })
     return JsonResponse({'blogs': data})
 
@@ -63,6 +64,7 @@ def blog_detail_json(request, pk):
         'created_at': blog.created_at.isoformat() if blog.created_at else None,
         'blog_views': blog.blog_views,
         'url': blog.get_absolute_url(),
+        'category': blog.category,
     }
     return JsonResponse({'blog': data})
 
@@ -146,24 +148,29 @@ def blog_delete_view(request, pk):
 def create_blog_flutter(request):
     if request.method == 'POST':
         data = json.loads(request.body)
-        title = strip_tags(data.get("title", ""))  # Strip HTML tags
-        summary = strip_tags(data.get("summary", ""))  # Strip HTML tags
-        content = strip_tags(data.get("content", ""))  # Strip HTML tags
+        title = strip_tags(data.get("title", ""))
+        summary = strip_tags(data.get("summary", ""))
+        content = strip_tags(data.get("content", ""))
         thumbnail = data.get("thumbnail", "")
-        author = strip_tags(data.get("author", ""))  # Strip HTML tags
-        
+        author = strip_tags(data.get("author", ""))
+        category = data.get("category", Blog.CATEGORY_CHOICES[0][0])  # code 'NEWS'/'TIPS'/...
+
+        valid_codes = {c[0] for c in Blog.CATEGORY_CHOICES}
+        if category not in valid_codes:
+            return JsonResponse({"status": "error", "message": "Invalid category"}, status=400)
+
         new_blog = Blog(
             title=title,
             summary=summary,
             content=content,
             thumbnail=thumbnail,
             author=author,
+            category=category,
         )
         new_blog.save()
-        
+
         return JsonResponse({"status": "success"}, status=200)
-    else:
-        return JsonResponse({"status": "error"}, status=401)
+    return JsonResponse({"status": "error"}, status=401)
     
 def proxy_image(request):
     image_url = request.GET.get('url')
@@ -192,6 +199,14 @@ def edit_blog_flutter(request, pk):
         except json.JSONDecodeError:
             return JsonResponse({"status": "error", "message": "Invalid JSON"}, status=400)
 
+        # Update category jika dikirim, dan validasi terhadap choices
+        category = data.get("category", None)
+        if category is not None:
+            valid_codes = {c[0] for c in Blog.CATEGORY_CHOICES}
+            if category not in valid_codes:
+                return JsonResponse({"status": "error", "message": "Invalid category"}, status=400)
+            blog.category = category
+
         blog.title = strip_tags(data.get("title", blog.title))
         blog.summary = strip_tags(data.get("summary", blog.summary))
         blog.content = strip_tags(data.get("content", blog.content))
@@ -209,3 +224,12 @@ def delete_blog_flutter(request, pk):
         blog.delete()
         return JsonResponse({"status": "success"}, status=200)
     return JsonResponse({"status": "error", "message": "Invalid request method"}, status=405)
+
+@csrf_exempt
+def increment_view_counter(request, blog_id):
+    try:
+        blog = Blog.objects.get(pk=blog_id)
+        blog.increment_views() # Ini memanggil fungsi yang ada di models.py
+        return JsonResponse({'status': 'success'})
+    except Blog.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Blog not found'}, status=404)
