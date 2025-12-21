@@ -9,7 +9,6 @@ from matches_flutter.models import Match
 def match_list_api(request):
     if request.method == "GET":
         matches = Match.objects.select_related("field").all().order_by("date", "time_slot")
-        
         data = []
         for match in matches:
             data.append({
@@ -22,34 +21,36 @@ def match_list_api(request):
                 "max_players": match.max_players,
                 "progress": match.progress,
             })
-            
         return JsonResponse({"status": "success", "data": data}, status=200)
 
     elif request.method == "POST":
         try:
             data = json.loads(request.body)
-            
-            field_id = data.get("field_id")
-            time_slot = data.get("time_slot")
-            date_str = data.get("date")
-            
-            if Match.objects.filter(field_id=field_id, date=date_str, time_slot=time_slot).exists():
-                return JsonResponse(
-                    {"status": "error", "message": "This time slot is already booked for this field."},
-                    status=400
-                )
+        except json.JSONDecodeError:
+            data = request.POST
 
-            try:
-                field = Field.objects.get(id=field_id)
-            except Field.DoesNotExist:
-                return JsonResponse({"status": "error", "message": "Field not found"}, status=404)
+        field_id = data.get("field_id")
+        time_slot = data.get("time_slot")
+        date_str = data.get("date")
+        
+        if Match.objects.filter(field_id=field_id, date=date_str, time_slot=time_slot).exists():
+            return JsonResponse(
+                {"status": "error", "message": "This time slot is already booked."},
+                status=400
+            )
 
-            creator_user = request.user
-            if not creator_user.is_authenticated:
-                creator_user = User.objects.first()
-                if not creator_user:
-                    return JsonResponse({"status": "error", "message": "No users found in database."}, status=500)
+        try:
+            field = Field.objects.get(id=field_id)
+        except Field.DoesNotExist:
+            return JsonResponse({"status": "error", "message": "Field not found"}, status=404)
 
+        creator_user = request.user
+        if not creator_user.is_authenticated:
+            creator_user = User.objects.first()
+            if not creator_user:
+                return JsonResponse({"status": "error", "message": "No users in DB"}, status=500)
+
+        try:
             match = Match.objects.create(
                 field=field,
                 creator=creator_user,
@@ -64,24 +65,17 @@ def match_list_api(request):
                 "field_name": match.field.name,
                 "time_slot": match.time_slot,
                 "date": str(match.date),
-                "price": match.price,
-                "current_players": match.current_players,
-                "max_players": match.max_players,
             }
             
             return JsonResponse(
-                {"status": "success", "message": "Match created successfully!", "data": response_data},
+                {"status": "success", "message": "Match created!", "data": response_data},
                 status=201
             )
-            
-        except json.JSONDecodeError:
-            return JsonResponse({"status": "error", "message": "Invalid JSON"}, status=400)
         except Exception as e:
             return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
     else:
         return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
-
 
 @csrf_exempt
 def get_occupied_slots(request):
