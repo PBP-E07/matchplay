@@ -10,6 +10,11 @@ from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse
 from django.core import serializers
 import json
+from datetime import datetime
+from django.db.models import Sum
+from .models import Equipment, Rental
+from django.utils.timezone import make_aware
+from django.utils import timezone
 
 def is_admin(user):
     if user.is_staff: 
@@ -24,6 +29,50 @@ def equipment_list(request):
 def equipment_detail(request, id):
     equipment = get_object_or_404(Equipment, id=id)
     return render(request, 'equipment/detail.html', {'equipment': equipment})
+
+def check_availability(request, id):
+    date_str = request.GET.get('date')
+    if not date_str:
+        return JsonResponse({'availability': []})
+
+    eq = get_object_or_404(Equipment, id=id)
+    
+    try:
+        # 1. Pastikan parsing tanggal benar
+        target_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+    except ValueError:
+        return JsonResponse({'error': 'Format tanggal salah. Gunakan YYYY-MM-DD'}, status=400)
+
+    availability_data = []
+    # 2. Loop jam 06.00 sampai 00.00 (24)
+    for i in range(6, 24):
+        start_h = f"{i:02d}.00"
+        end_h = f"{(i+1):02d}.00" if i < 23 else "00.00"
+        slot = f"{start_h}-{end_h}"
+        
+        # 3. Buat waktu jadi TIMEZONE AWARE biar gak crash
+        s_time = make_aware(datetime.strptime(f"{date_str} {start_h}", "%Y-%m-%d %H.%M"))
+        # Jika jam 00.00, berarti itu hari berikutnya
+        if i == 23:
+            e_time = s_time + timezone.timedelta(hours=1)
+        else:
+            e_time = make_aware(datetime.strptime(f"{date_str} {end_h}", "%Y-%m-%d %H.%M"))
+
+        # 4. Hitung stok yang sudah dipesan
+        rented_count = Rental.objects.filter(
+            equipment=eq,
+            start_time__lt=e_time,
+            end_time__gt=s_time
+        ).aggregate(total=Sum('quantity_rented'))['total'] or 0
+        
+        remaining_stock = eq.quantity - rented_count
+
+        availability_data.append({
+            'slot': slot,
+            'stock': max(0, remaining_stock)
+        })
+
+    return JsonResponse({'availability': availability_data})
 
 @csrf_exempt
 @require_POST
@@ -80,17 +129,19 @@ def delete_equipment(request, id):
 @login_required
 def equipment_json_detail(request, id):
     equipment = get_object_or_404(Equipment, id=id)
+    # Cek apakah image itu URL atau file path
+    image_url = str(equipment.image)
+    if not image_url.startswith('http'):
+        image_url = request.build_absolute_uri(equipment.image.url) if equipment.image else ''
+
     return JsonResponse({
         'id': equipment.id,
         'name': equipment.name,
         'quantity': equipment.quantity,
         'price_per_hour': str(equipment.price_per_hour),
-        'description': equipment.description or ''
+        'description': equipment.description or '',
+        'image_url': image_url  # Ini yang akan dipake Image.network di Flutter
     })
-
-def show_json(request):
-    data = Equipment.objects.all()
-    return HttpResponse(serializers.serialize("json", data), content_type="application/json")
 
 @csrf_exempt
 def create_equipment_flutter(request):
@@ -115,3 +166,58 @@ def create_equipment_flutter(request):
             return JsonResponse({"status": "error", "message": str(e)}, status=500)
             
     return JsonResponse({"status": "error", "message": "Method not allowed"}, status=401)
+
+@csrf_exempt
+@login_required
+def book_equipment(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            eq = get_object_or_404(Equipment, id=data['eq_id'])
+            date_str = data['date'] 
+            slot = data['slot']     
+            requested_qty = int(data.get('quantity', 1))
+            
+            # 1. PARSE WAKTU DULU (Penting: harus sebelum filter!)
+            start_h, end_h = slot.split('-')
+            
+            # Pakai make_aware biar sinkron dengan timezone Django lo
+            start_time = make_aware(datetime.strptime(f"{date_str} {start_h}", "%Y-%m-%d %H.%M"))
+            end_time = make_aware(datetime.strptime(f"{date_str} {end_h}", "%Y-%m-%d %H.%M"))
+
+            # 2. CEK STOK (Sekarang end_time sudah ada nilainya)
+            rented_sum = Rental.objects.filter(
+                equipment=eq,
+                start_time__lt=end_time, # end_time dipanggil di sini
+                end_time__gt=start_time
+            ).aggregate(total=Sum('quantity_rented'))['total'] or 0
+
+            if rented_sum + requested_qty > eq.quantity:
+                sisa = eq.quantity - rented_sum
+                return JsonResponse({
+                    'status': 'error', 
+                    'error': f'Waduh, jam ini cuma sisa {sisa} alat.'
+                }, status=400)
+
+            # 3. SIMPAN RENTAL
+            Rental.objects.create(
+                equipment=eq,
+                renter_name=request.user.username,
+                quantity_rented=requested_qty,
+                start_time=start_time,
+                end_time=end_time
+            )
+            return JsonResponse({'status': 'success'})
+
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'error': str(e)}, status=500)
+    
+def show_json(request):
+    data = Equipment.objects.all()
+    return HttpResponse(serializers.serialize("json", data), content_type="application/json")
+
+@login_required
+def my_bookings(request):
+    # Mengambil data sewa user yang login, urutkan dari yang terbaru
+    bookings = Rental.objects.filter(renter_name=request.user.username).order_by('-start_time')
+    return render(request, 'equipment/my_bookings.html', {'bookings': bookings})

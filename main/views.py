@@ -6,6 +6,7 @@ from fields.models import Field
 from django.db.models import Q
 from matches.models import Match
 
+
 def show_main(request):
     query = request.GET.get("q", "")
     

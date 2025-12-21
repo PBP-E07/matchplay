@@ -7,8 +7,7 @@
     </h2>
 
     {% if user.is_staff %}
-    <button id="openAddModal"
-      class="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition">
+    <button id="openAddModal" class="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition">
       + Tambah Alat
     </button>
     {% endif %}
@@ -18,7 +17,7 @@
   <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
     {% for eq in equipments %}
     <div class="bg-white rounded-xl shadow-md p-4 flex flex-col justify-between">
-      <img src="{{ eq.image.url }}" alt="{{ eq.name }}" class="w-full h-48 object-cover rounded-md mb-3">
+      <img src="{{ eq.get_image_url }}" alt="{{ eq.name }}" class="w-full h-48 object-cover rounded-md mb-3">
       <div>
         <h3 class="text-md font-bold">{{ eq.name }}</h3>
         <p class="text-gray-700 font-semibold">Rp{{ eq.price_per_hour }} / jam</p>
@@ -27,18 +26,41 @@
         </p>
       </div>
 
-      <div class="flex gap-2 mt-3">
-        <button class="flex-1 bg-green-500 text-white font-semibold px-4 py-2 rounded-md hover:bg-green-600 transition">
-          Sewa
+      <div class="flex items-center gap-2 mt-5">
+        <button onclick="openBookingModal('{{ eq.id }}', '{{ eq.name }}')" class="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold py-2.5 px-4 rounded-xl 
+                       shadow-md hover:shadow-green-200 hover:-translate-y-0.5 active:scale-95 transition-all duration-200 
+                       flex items-center justify-center gap-2 text-sm uppercase tracking-wider">
+          <span>Sewa</span>
+        </button>
+
+        <button data-id="{{ eq.id }}" class="detailBtn group p-2.5 bg-slate-100 text-slate-500 rounded-xl hover:bg-blue-600 hover:text-white 
+                       transition-all duration-300 shadow-sm active:scale-90 flex items-center justify-center"
+          title="Lihat Detail">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
+            class="w-6 h-6 group-hover:rotate-12 transition-transform">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+          </svg>
         </button>
 
         {% if user.is_staff %}
-        <button data-id="{{ eq.id }}" class="editBtn bg-yellow-400 text-white px-3 rounded-md hover:bg-yellow-500">
-          ✏️
-        </button>
-        <button data-id="{{ eq.id }}" class="deleteBtn bg-red-500 text-white px-3 rounded-md hover:bg-red-600">
-          🗑️
-        </button>
+        <div class="flex gap-1 ml-1 border-l pl-2 border-slate-200">
+          <button data-id="{{ eq.id }}"
+            class="editBtn p-2 text-yellow-500 hover:bg-yellow-50 rounded-lg transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+              stroke="currentColor" class="w-5 h-5">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+            </svg>
+          </button>
+          <button data-id="{{ eq.id }}" class="deleteBtn p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+              stroke="currentColor" class="w-5 h-5">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+            </svg>
+          </button>
+        </div>
         {% endif %}
       </div>
     </div>
@@ -54,7 +76,8 @@
       {% csrf_token %}
       <input type="text" name="name" placeholder="Nama Alat" class="w-full mb-3 border rounded p-2" required>
       <input type="number" name="quantity" placeholder="Jumlah" class="w-full mb-3 border rounded p-2" required>
-      <input type="number" name="price_per_hour" placeholder="Harga (per jam)" class="w-full mb-3 border rounded p-2" required>
+      <input type="number" name="price_per_hour" placeholder="Harga (per jam)" class="w-full mb-3 border rounded p-2"
+        required>
       <textarea name="description" placeholder="Deskripsi" class="w-full mb-3 border rounded p-2"></textarea>
       <input type="file" name="image" accept="image/*" class="w-full mb-3 border rounded p-2" required>
 
@@ -73,87 +96,386 @@
     <form id="editEquipmentForm" enctype="multipart/form-data">
       {% csrf_token %}
       <input type="hidden" name="id" id="edit_id">
-      <input type="text" name="name" id="edit_name" placeholder="Nama Alat" class="w-full mb-3 border rounded p-2" required>
-      <input type="number" name="quantity" id="edit_quantity" placeholder="Jumlah" class="w-full mb-3 border rounded p-2" required>
-      <input type="number" name="price_per_hour" id="edit_price" placeholder="Harga (per jam)" class="w-full mb-3 border rounded p-2" required>
-      <textarea name="description" id="edit_description" placeholder="Deskripsi" class="w-full mb-3 border rounded p-2"></textarea>
+      <input type="text" name="name" id="edit_name" placeholder="Nama Alat" class="w-full mb-3 border rounded p-2"
+        required>
+      <input type="number" name="quantity" id="edit_quantity" placeholder="Jumlah"
+        class="w-full mb-3 border rounded p-2" required>
+      <input type="number" name="price_per_hour" id="edit_price" placeholder="Harga (per jam)"
+        class="w-full mb-3 border rounded p-2" required>
+      <textarea name="description" id="edit_description" placeholder="Deskripsi"
+        class="w-full mb-3 border rounded p-2"></textarea>
       <input type="file" name="image" accept="image/*" class="w-full mb-3 border rounded p-2">
 
       <div class="flex justify-end gap-3">
-        <button type="button" id="closeEditModal" class="px-3 py-1 bg-gray-300 rounded-md hover:bg-gray-400">Batal</button>
+        <button type="button" id="closeEditModal"
+          class="px-3 py-1 bg-gray-300 rounded-md hover:bg-gray-400">Batal</button>
         <button type="submit" class="px-3 py-1 bg-yellow-500 text-white rounded-md hover:bg-yellow-600">Simpan</button>
       </div>
     </form>
   </div>
 </div>
 
+<div id="detailModal" class="fixed inset-0 bg-black bg-opacity-60 hidden justify-center items-center z-50 p-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col md:flex-row max-h-[90vh]">
+    <div class="md:w-1/2 bg-gray-100">
+      <img id="detail_image" src="" alt="Equipment Image" class="w-full h-full object-cover">
+    </div>
+
+    <div class="md:w-1/2 p-6 flex flex-col">
+      <div class="flex justify-between items-start mb-4">
+        <h2 id="detail_name" class="text-2xl font-bold text-gray-800"></h2>
+        <button id="closeDetailModal" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+      </div>
+
+      <div class="flex flex-col gap-2 mb-6 overflow-y-auto">
+        <span class="text-green-600 font-bold text-xl" id="detail_price"></span>
+        <p class="text-sm text-gray-500" id="detail_quantity"></p>
+        <hr class="my-2">
+        <p class="text-gray-600 leading-relaxed" id="detail_description"></p>
+      </div>
+
+      <div class="mt-auto">
+        <button id="btn_sewa_from_detail"
+          class="w-full bg-green-500 text-white font-bold py-3 rounded-xl hover:bg-green-600 transition">
+          Sewa Sekarang
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="bookingModal" class="fixed inset-0 bg-black bg-opacity-60 hidden justify-center items-center z-[60] p-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col">
+    <div class="p-6 border-b flex justify-between items-center bg-slate-50">
+      <h2 class="text-xl font-bold text-gray-800" id="booking_title">Sewa Alat</h2>
+      <button onclick="closeBookingModal()" class="text-gray-400 hover:text-red-500 text-2xl"
+        type="button">&times;</button>
+    </div>
+
+    <div id="stage_selection" class="p-6 space-y-4">
+      <div>
+        <label class="block text-sm font-bold text-gray-700 mb-2">Mau sewa berapa alat?</label>
+        <input type="number" id="book_qty" value="1" min="1"
+          class="w-full border rounded-xl p-3 focus:ring-2 focus:ring-green-500 outline-none">
+      </div>
+
+      <div>
+        <label class="block text-sm font-bold text-gray-700 mb-2">Pilih Tanggal</label>
+        <input type="date" id="book_date"
+          class="w-full border rounded-xl p-3 mb-3 focus:ring-2 focus:ring-green-500 outline-none">
+
+        <label class="block text-sm font-bold text-gray-700 mb-2">Pilih Slot Jam</label>
+        <div id="time_slots" class="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-2">
+        </div>
+      </div>
+
+      <button id="btn_go_payment"
+        class="w-full bg-green-500 text-white font-bold py-3 rounded-xl hover:bg-green-600 transition mt-4 opacity-50 cursor-not-allowed"
+        disabled>
+        Lanjut ke Pembayaran
+      </button>
+    </div>
+
+    <div id="stage_payment" class="p-6 hidden text-center space-y-4">
+      <div class="bg-yellow-50 text-yellow-700 p-3 rounded-lg text-sm font-medium">
+        Selesaikan pembayaran dalam: <span id="timer" class="font-bold text-lg">05:00</span>
+      </div>
+      <div class="flex justify-center p-4 bg-white border-2 border-dashed border-gray-200 rounded-xl">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=PEMBAYARAN_SIMULASI" alt="QRIS"
+          class="w-48 h-48">
+      </div>
+      <p class="text-gray-500 text-xs">Scan QR dengan aplikasi bank atau e-wallet pilihanmu.</p>
+      <button id="btn_confirm_payment"
+        class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition">
+        Konfirmasi Sudah Bayar
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-// buka modal tambah
-document.getElementById("openAddModal")?.addEventListener("click", () => {
-  document.getElementById("addModal").classList.remove("hidden");
-  document.getElementById("addModal").classList.add("flex");
-});
-document.getElementById("closeModal")?.addEventListener("click", () => {
-  document.getElementById("addModal").classList.add("hidden");
-});
+  // ==========================================
+  // 1. GLOBAL VARIABLES & UTILITIES
+  // ==========================================
+  let countdownInterval;
+  let selectedSlot = null;
+  let currentEqId = null;
+  let maxStockAtSelectedSlot = 0; // Stok maksimal di jam yang dipilih
 
-// submit tambah alat
-document.getElementById("addEquipmentForm")?.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const formData = new FormData(e.target);
-  const res = await fetch("{% url 'equipment:add_equipment' %}", {
-    method: "POST",
-    headers: { "X-CSRFToken": "{{ csrf_token }}" },
-    body: formData
-  });
-  if (res.ok) location.reload()
-});
+  const openModal = (id) => {
+    const modal = document.getElementById(id);
+    if (modal) {
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+    }
+  };
 
-// buka modal edit
-document.querySelectorAll(".editBtn").forEach(btn => {
-  btn.addEventListener("click", async () => {
-    const id = btn.dataset.id;
-    const res = await fetch(`/equipment/${id}/detail/`);
-    const data = await res.json();
-    document.getElementById("edit_id").value = data.id;
-    document.getElementById("edit_name").value = data.name;
-    document.getElementById("edit_quantity").value = data.quantity;
-    document.getElementById("edit_price").value = data.price_per_hour;
-    document.getElementById("edit_description").value = data.description;
-    document.getElementById("editModal").classList.remove("hidden");
-    document.getElementById("editModal").classList.add("flex");
-  });
-});
+  const closeModal = (id) => {
+    const modal = document.getElementById(id);
+    if (modal) {
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+    }
+  };
 
-document.getElementById("closeEditModal")?.addEventListener("click", () => {
-  document.getElementById("editModal").classList.add("hidden");
-});
-
-// submit edit
-document.getElementById("editEquipmentForm")?.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const formData = new FormData(e.target);
-  const id = document.getElementById("edit_id").value;
-  const res = await fetch(`/equipment/${id}/edit/`, {
-    method: "POST",
-    headers: { "X-CSRFToken": "{{ csrf_token }}" },
-    body: formData
-  });
-  if (res.ok) location.reload();
-});
-
-// hapus alat
-document.querySelectorAll(".deleteBtn").forEach(btn => {
-  btn.addEventListener("click", async () => {
-    const id = btn.dataset.id;
-    if (confirm("Yakin mau hapus alat ini?")) {
-      const res = await fetch(`/equipment/${id}/delete/`, {
-        method: "POST",
-        headers: { "X-CSRFToken": "{{ csrf_token }}" }
-      });
-      if (res.ok) location.reload();
+  // Tutup modal kalau klik di luar area (overlay)
+  window.addEventListener("click", (e) => {
+    if (e.target.classList.contains('fixed') && !e.target.classList.contains('hidden')) {
+      const modalId = e.target.id;
+      closeModal(modalId);
+      if (modalId === 'bookingModal') clearInterval(countdownInterval);
     }
   });
-});
+
+  const showToast = (icon, message) => {
+    const Toast = Swal.mixin({
+      toast: true,
+      position: 'top-end',
+      showConfirmButton: false,
+      timer: 3000,
+      timerProgressBar: true
+    });
+    Toast.fire({ icon: icon, title: message });
+  };
+
+  // ==========================================
+  // 2. FITUR ADMIN (ADD, EDIT, DELETE)
+  // ==========================================
+
+  // Tambah Alat
+  document.getElementById("openAddModal")?.addEventListener("click", () => openModal("addModal"));
+  document.getElementById("closeModal")?.addEventListener("click", () => closeModal("addModal"));
+  document.getElementById("addEquipmentForm")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const res = await fetch("{% url 'equipment:add_equipment' %}", {
+      method: "POST",
+      headers: { "X-CSRFToken": "{{ csrf_token }}" },
+      body: formData
+    });
+    if (res.ok) location.reload();
+  });
+
+  // Edit Alat
+  document.querySelectorAll(".editBtn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const id = btn.dataset.id;
+      const res = await fetch(`/equipment/${id}/detail/`);
+      const data = await res.json();
+      document.getElementById("edit_id").value = data.id;
+      document.getElementById("edit_name").value = data.name;
+      document.getElementById("edit_quantity").value = data.quantity;
+      document.getElementById("edit_price").value = data.price_per_hour;
+      document.getElementById("edit_description").value = data.description;
+      openModal("editModal");
+    });
+  });
+
+  document.getElementById("closeEditModal")?.addEventListener("click", () => closeModal("editModal"));
+  document.getElementById("editEquipmentForm")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const id = document.getElementById("edit_id").value;
+    const res = await fetch(`/equipment/${id}/edit/`, {
+      method: "POST",
+      headers: { "X-CSRFToken": "{{ csrf_token }}" },
+      body: formData
+    });
+    if (res.ok) location.reload();
+  });
+
+  // Hapus Alat
+  document.querySelectorAll(".deleteBtn").forEach(btn => {
+    btn.addEventListener("click", function () {
+      const id = this.dataset.id;
+      Swal.fire({
+        title: 'Yakin mau hapus?',
+        text: "Data nggak bisa balik lagi lho!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, Hapus!'
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          const res = await fetch(`/equipment/${id}/delete/`, {
+            method: "POST",
+            headers: { "X-CSRFToken": "{{ csrf_token }}" }
+          });
+          if (res.ok) {
+            showToast('success', 'Alat dihapus!');
+            setTimeout(() => location.reload(), 1000);
+          }
+        }
+      });
+    });
+  });
+
+  // ==========================================
+  // 3. FITUR DETAIL ALAT
+  // ==========================================
+  document.querySelectorAll(".detailBtn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const id = btn.dataset.id;
+      const res = await fetch(`/equipment/${id}/detail/`);
+      const data = await res.json();
+      currentEqId = id; // Simpan ID untuk sewa dari detail
+
+      document.getElementById("detail_name").innerText = data.name;
+      document.getElementById("detail_price").innerText = `Rp${data.price_per_hour} / jam`;
+      document.getElementById("detail_quantity").innerText = `${data.quantity} barang tersedia`;
+      document.getElementById("detail_description").innerText = data.description || "Tidak ada deskripsi.";
+      document.getElementById("detail_image").src = data.image_url || "/static/images/default.png";
+
+      openModal("detailModal");
+    });
+  });
+
+  document.getElementById("closeDetailModal")?.addEventListener("click", () => closeModal("detailModal"));
+
+  // ==========================================
+  // 4. FITUR BOOKING & AVAILABILITY (FIXED)
+  // ==========================================
+
+  function openBookingModal(id, name) {
+    currentEqId = id;
+    selectedSlot = null;
+
+    document.getElementById('booking_title').innerText = `Sewa ${name}`;
+    document.getElementById('book_qty').value = 1; // Reset jumlah alat jadi 1 tiap buka
+
+    document.getElementById('stage_selection').classList.remove('hidden');
+    document.getElementById('stage_payment').classList.add('hidden');
+
+    const nextBtn = document.getElementById('btn_go_payment');
+    nextBtn.disabled = true;
+    nextBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+    openModal("bookingModal");
+  }
+
+  document.getElementById('btn_sewa_from_detail')?.addEventListener('click', () => {
+    // Ambil nama dari judul modal detail yang lagi kebuka
+    const name = document.getElementById('detail_name').innerText;
+
+    // Tutup modal detail dulu
+    closeModal('detailModal');
+
+    // Buka modal booking buat alat yang sama (currentEqId udah kesimpen pas buka detail)
+    openBookingModal(currentEqId, name);
+  });
+
+  async function generateTimeSlots() {
+    const container = document.getElementById('time_slots');
+    const dateInput = document.getElementById('book_date').value;
+    if (!dateInput) return;
+
+    container.innerHTML = '<p class="text-sm text-gray-500 animate-pulse">Memuat jadwal...</p>';
+
+    try {
+      const res = await fetch(`/equipment/${currentEqId}/availability/?date=${dateInput}`);
+      const data = await res.json();
+      container.innerHTML = '';
+
+      data.availability.forEach(item => {
+        let btn = document.createElement('button');
+        btn.type = "button";
+        if (item.stock <= 0) {
+          btn.className = "p-2 rounded-lg text-xs bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed";
+          btn.innerHTML = `${item.slot} <br> <span class="text-red-500 font-bold">FULL</span>`;
+          btn.disabled = true;
+        } else {
+          btn.className = "time-btn border p-2 rounded-lg text-xs hover:bg-green-50 hover:border-green-500 transition";
+          btn.innerHTML = `${item.slot} <br> <span class="text-green-600">Sisa: ${item.stock}</span>`;
+          btn.onclick = () => {
+            document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('bg-green-500', 'text-white'));
+            btn.classList.add('bg-green-500', 'text-white');
+            selectedSlot = item.slot;
+            maxStockAtSelectedSlot = item.stock;
+            const nextBtn = document.getElementById('btn_go_payment');
+            nextBtn.disabled = false;
+            nextBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+          };
+        }
+        container.appendChild(btn);
+      });
+    } catch (err) {
+      container.innerHTML = '<p class="text-sm text-red-500">Gagal memuat jadwal.</p>';
+    }
+  }
+
+  document.getElementById('book_date').addEventListener('change', generateTimeSlots);
+
+  // Lanjut ke Pembayaran
+  document.getElementById('btn_go_payment').onclick = () => {
+    // Tambahkan field quantity di HTML lo ya!
+    const qtyInput = document.getElementById('book_qty');
+    const requestedQty = qtyInput ? parseInt(qtyInput.value) : 1;
+
+    if (requestedQty > maxStockAtSelectedSlot) {
+      showToast('error', `Stok cuma sisa ${maxStockAtSelectedSlot}!`);
+      return;
+    }
+
+    document.getElementById('stage_selection').classList.add('hidden');
+    document.getElementById('stage_payment').classList.remove('hidden');
+    startTimer(300);
+  };
+
+  function startTimer(duration) {
+    let timer = duration, minutes, seconds;
+    clearInterval(countdownInterval);
+    countdownInterval = setInterval(() => {
+      minutes = parseInt(timer / 60, 10);
+      seconds = parseInt(timer % 60, 10);
+      document.getElementById('timer').textContent = `${minutes}:${seconds < 10 ? '0' + seconds : seconds}`;
+      if (--timer < 0) {
+        clearInterval(countdownInterval);
+        closeBookingModal();
+        Swal.fire('Waktu Habis', 'Silakan ulangi pesanan.', 'error');
+      }
+    }, 1000);
+  }
+  function closeBookingModal() {
+    closeModal("bookingModal");
+    clearInterval(countdownInterval); // Berhentiin timer pas ditutup
+    selectedSlot = null; // Reset slot
+  }
+  // Final Konfirmasi
+  document.getElementById('btn_confirm_payment').onclick = async () => {
+    const date = document.getElementById('book_date').value;
+    const qty = document.getElementById('book_qty').value;
+
+    try {
+      const res = await fetch(`/equipment/book/`, {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": "{{ csrf_token }}",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          eq_id: currentEqId,
+          date: date,
+          slot: selectedSlot,
+          quantity: qty
+        })
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        // Toast Berhasil
+        showToast('success', 'Booking Berhasil! 🔥');
+        setTimeout(() => {
+          location.reload();
+        }, 1500);
+      } else {
+        // Toast Gagal (Misal stok tiba-tiba abis)
+        showToast('error', data.error || 'Gagal booking, coba lagi.');
+      }
+    } catch (err) {
+      showToast('error', 'Terjadi kesalahan koneksi.');
+    }
+  };
 </script>
 {% endblock %}
