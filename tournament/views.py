@@ -5,7 +5,9 @@ from django.http import JsonResponse
 from django.utils import timezone
 from django.contrib import messages
 from datetime import datetime
-
+import json
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
 
 # Create your views here.
 def tournament_list(request):
@@ -36,6 +38,7 @@ def tournament_matches(request, pk):
     return render(request, 'tournament/matches.html', {'tournament': tournament})
 
 
+# GET TOURNAMENT JSON
 def get_tournaments_json(request):
     filter_type = request.GET.get("status")  
 
@@ -86,7 +89,7 @@ def get_matches_json(request, pk):
     ]
     return JsonResponse(data, safe=False)
 
-
+@login_required
 def create_tournament(request):
     if request.method == "POST":
         name = request.POST.get("name")
@@ -99,6 +102,7 @@ def create_tournament(request):
         banner_image = request.POST.get("banner_image")
         is_private = request.POST.get("is_private") == "on"
 
+        # VALIDASI INPUT
         if Tournament.objects.filter(name__iexact=name).exists():
             messages.error(request, "Nama turnamen sudah digunakan. Gunakan nama lain.")
             return render(request, "tournament/create_tournament.html")
@@ -143,7 +147,7 @@ def create_tournament(request):
 
     return render(request, "tournament/create_tournament.html")
 
-
+# POST API MATCHES
 @login_required
 def join_tournament(request, pk):
     tournament = get_object_or_404(Tournament, pk=pk)
@@ -152,6 +156,7 @@ def join_tournament(request, pk):
         team_name = request.POST.get("name")
         logo_url = request.POST.get("logo_url")
 
+        ## VALIDASI INPUT
         if not team_name:
             return render(request, "tournament/join_tournament.html", {
                 "tournament": tournament,
@@ -183,6 +188,12 @@ def join_tournament(request, pk):
 def edit_tournament(request, pk):
     tournament = get_object_or_404(Tournament, pk=pk)
 
+    if tournament.created_by != request.user:
+        return render(request, "tournament/access_denied.html", {
+        "tournament": tournament,
+        "message": "Kamu tidak memiliki izin untuk mengedit turnamen ini."
+    })
+
     if request.method == "POST":
         tournament.name = request.POST.get("name")
         tournament.sport_type = request.POST.get("sport_type")
@@ -204,6 +215,12 @@ def edit_tournament(request, pk):
 def delete_tournament(request, pk):
     tournament = get_object_or_404(Tournament, pk=pk)
 
+    if tournament.created_by != request.user:
+        return render(request, "tournament/access_denied.html", {
+        "tournament": tournament,
+        "message": "Kamu tidak memiliki izin untuk mengedit turnamen ini."
+    })
+
     if request.method == "POST":
         tournament.delete()
         return redirect("tournament:tournament_list")
@@ -214,6 +231,12 @@ def delete_tournament(request, pk):
 def create_match(request, pk):
     tournament = get_object_or_404(Tournament, pk=pk)
     teams = tournament.teams.all()
+
+    if tournament.created_by != request.user:
+        return render(request, "tournament/access_denied.html", {
+        "tournament": tournament,
+        "message": "Kamu tidak memiliki izin untuk mengedit turnamen ini."
+    })
 
     if request.method == "POST":
         team1_id = request.POST.get("team1")
@@ -257,6 +280,12 @@ def edit_match(request, pk, match_id):
     tournament = get_object_or_404(Tournament, pk=pk)
     match = get_object_or_404(Match, pk=match_id, tournament=tournament)
 
+    if tournament.created_by != request.user:
+        return render(request, "tournament/access_denied.html", {
+        "tournament": tournament,
+        "message": "Kamu tidak memiliki izin untuk mengedit turnamen ini."
+    })
+
     if request.method == "POST":
         score_team1 = request.POST.get("score_team1")
         score_team2 = request.POST.get("score_team2")
@@ -278,6 +307,12 @@ def delete_match(request, pk, match_id):
     tournament = get_object_or_404(Tournament, pk=pk)
     match = get_object_or_404(Match, pk=match_id, tournament=tournament)
 
+    if tournament.created_by != request.user:
+        return render(request, "tournament/access_denied.html", {
+        "tournament": tournament,
+        "message": "Kamu tidak memiliki izin untuk mengedit turnamen ini."
+    })
+
     if request.method == "POST":
         match.delete()
         return redirect("tournament:tournament_matches", pk=tournament.pk)
@@ -286,3 +321,102 @@ def delete_match(request, pk, match_id):
         "tournament": tournament,
         "match": match
     })
+
+# POST API TOURNAMENT
+@csrf_exempt
+@require_http_methods(["POST"])
+def create_tournament_api(request):
+    try:
+        data = json.loads(request.body)
+        
+        name = data.get("name")
+        start_date_str = data.get("start_date")
+        end_date_str = data.get("end_date")
+        
+        if not name:
+            return JsonResponse({"status": "error", "message": "Nama tournament wajib diisi"}, status=400)
+        
+        start_date = timezone.now().date()
+        end_date = None
+
+        if start_date_str:
+            try:
+                start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
+            except ValueError:
+                return JsonResponse({"status": "error", "message": "Format tanggal mulai salah (Gunakan YYYY-MM-DD)"}, status=400)
+        
+        if end_date_str:
+            try:
+                end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
+                if start_date > end_date:
+                    return JsonResponse({"status": "error", "message": "Tanggal selesai tidak boleh sebelum tanggal mulai"}, status=400)
+            except ValueError:
+                return JsonResponse({"status": "error", "message": "Format tanggal selesai salah"}, status=400)
+
+        tournament = Tournament.objects.create(
+            name=name,
+            sport_type=data.get("sport_type", "General"),
+            location=data.get("location", ""),
+            start_date=start_date,
+            end_date=end_date,
+            description=data.get("description", ""),
+            is_private=False, # Default public untuk API ini
+            created_by=request.user if request.user.is_authenticated else None # Handle jika user belum login/anonymous
+        )
+
+        return JsonResponse({
+            "status": "success",
+            "message": "Tournament created successfully",
+            "data": {
+                "id": tournament.id,
+                "name": tournament.name
+            }
+        }, status=201)
+
+    except json.JSONDecodeError:
+        return JsonResponse({"status": "error", "message": "Invalid JSON"}, status=400)
+
+# POST API MATCHES
+@csrf_exempt
+@require_http_methods(["POST"])
+def create_match_api(request, pk):
+    tournament = get_object_or_404(Tournament, pk=pk)
+    
+    try:
+        data = json.loads(request.body)
+        
+        team1_id = data.get("team1_id")
+        team2_id = data.get("team2_id")
+        round_number = data.get("round_number", 1)
+
+        if not team1_id or not team2_id:
+            return JsonResponse({"status": "error", "message": "Team 1 dan Team 2 wajib diisi"}, status=400)
+
+        if team1_id == team2_id:
+            return JsonResponse({"status": "error", "message": "Team tidak boleh sama"}, status=400)
+        
+        try:
+            team1 = Team.objects.get(id=team1_id)
+            team2 = Team.objects.get(id=team2_id)
+        except Team.DoesNotExist:
+            return JsonResponse({"status": "error", "message": "Salah satu Team ID tidak ditemukan"}, status=404)
+
+        match = Match.objects.create(
+            tournament=tournament,
+            team1=team1,
+            team2=team2,
+            round_number=round_number
+        )
+
+        return JsonResponse({
+            "status": "success",
+            "message": "Match created successfully",
+            "data": {
+                "match_id": match.id,
+                "team1": team1.name,
+                "team2": team2.name
+            }
+        }, status=201)
+
+    except json.JSONDecodeError:
+        return JsonResponse({"status": "error", "message": "Invalid JSON"}, status=400)

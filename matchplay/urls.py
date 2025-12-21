@@ -16,15 +16,26 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
+from django.views.generic import TemplateView
 
 urlpatterns = [
+    # Admin
     path('admin/', admin.site.urls),
+
+    # Jalur Web
     path('', include('main.urls')),
     path('', include('authentication.urls')),
     path('dashboard/', include('dashboard.urls')),
     path('equipment/', include('equipment.urls')),
+    path('matches/', include('matches.urls')), 
     path('tournament/', include('tournament.urls')),
     path('bookings/', include('bookings.urls')),
     path('blog/', include('blog.urls')),
-    path('matches/', include('matches.urls')),
+    path('api/fields/', include('fields.urls_api')),
+    path('sitemap.xml', TemplateView.as_view(template_name='sitemap.xml', content_type='text/xml')),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

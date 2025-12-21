@@ -21,14 +21,20 @@ Sistem Matchmaking memungkinkan pengguna menemukan lawan atau teman bermain. Saa
 ## 🧰 Modul-Modul Matchplay
 Aplikasi ini dibagi menjadi beberapa modul.
 
-| Nama Modul | Fungsi |
-|------------|--------|
-| ```authentication``` | Modul ini nantinya akan berfungsi untuk mengurus segala macam autentikasi yang terdapat di aplikasi ini. Mau itu dari pengguna biasa ataupun pemilik lapangan. Modul ini juga nantinya mengurus perizinan (authorization) yang dimiliki oleh seorang pengguna. |
-|```fields```| Modul ini berfungsi untuk mengurus segala macam hal yang berhubungan dengan lapangan. Hal-hal ini mencakup membuat, melihat, mengubah, dan menghapus lapangan yang ada (CRUD). Modul ini juga menyimpan review dan penilaian pengguna terhadap lapangan tersebut. |
-| ```matches``` | Modul ini berfungsi untuk menjalankan fitur matchmaking. Modul ini juga berfungsi untuk memberikan data matchmaking yang sedang berjalan. Modul ini juga nantinya akan mengurus fitur tournament antar tim. |
-| ```bookings``` | Modul ini berfungsi untuk mengurus pemesanan atau peminjaman sebuah lapangan. Beda dengan matchmaking, fitur ini digunakan untuk orang yang ingin menyewa sebuah lapangan secara langsung tanpa matchmaking dengan orang lain. |
-| ```tournament``` | Modul ini berfungsi untuk menjalankan fungsi turnamen. Modul ini nantinya akan mengurus anggota-anggota dari sebuah tim, nama tim, dan hal-hal lainnya yang berhubungan dengan turnamen. |
-| ```equipment``` | Modul ini berfungsi untuk menjalankan fungsi peminjaman alat olahraga. |
+| Nama Modul | Fungsi | Pembuat |
+|------------|--------|---------|
+| ```main``` | Modul ini berfungsi untuk mengurus halaman utama website. | Valerian Hizkia Emmanuel |
+| ```authentication``` | Modul ini nantinya akan berfungsi untuk mengurus segala macam autentikasi yang terdapat di aplikasi ini. Mau itu dari pengguna biasa ataupun pemilik lapangan. Modul ini juga nantinya mengurus perizinan (authorization) yang dimiliki oleh seorang pengguna. | Seluruh Anggota |
+|```fields```| Modul ini berfungsi untuk mengurus model dari lapangan. | Faris Huda |
+|```dashboard```| Modul ini berfungsi untuk mengurus segala macam hal yang berhubungan dengan lapangan. Hal-hal ini mencakup membuat, melihat, mengubah, dan menghapus lapangan yang ada (CRUD). Modul ini juga menyimpan review dan penilaian pengguna terhadap lapangan tersebut. | Faris Huda |
+| ```matches``` | Modul ini berfungsi untuk menjalankan fitur matchmaking. Modul ini juga berfungsi untuk memberikan data matchmaking yang sedang berjalan. Modul ini juga nantinya akan mengurus fitur tournament antar tim. | Valerian Hizkia Emmanuel |
+| ```bookings``` | Modul ini berfungsi untuk mengurus pemesanan atau peminjaman sebuah lapangan. Beda dengan matchmaking, fitur ini digunakan untuk orang yang ingin menyewa sebuah lapangan secara langsung tanpa matchmaking dengan orang lain. | Valerian Hizkia Emmanuel |
+| ```tournament``` | Modul ini berfungsi untuk menjalankan fungsi turnamen. Modul ini nantinya akan mengurus anggota-anggota dari sebuah tim, nama tim, dan hal-hal lainnya yang berhubungan dengan turnamen. | Muhammad Rifqi Ilham |
+| ```equipment``` | Modul ini berfungsi untuk menjalankan fungsi peminjaman alat olahraga. | Fathan Alfahrezi |
+| ```blog``` | Modul ini berfungsi untuk menjalankan fungsi CRUD untuk blog pada website. | Geraldus Catur Gigih Wahyudi |
+
+## 🖼️ Link Desain
+- https://www.figma.com/design/rEODHOiReZtWyQa6pO914s/MatchPlay?node-id=0-1&t=ZTuwXxJZfQBtM5pH-1
 
 ## 📊 Sumber Initial Dataset
 - Dataset lapangan didapatkan dari hasil <i>scrapping dari website</i> https://ayo.co.id/sitemap/v.xml
