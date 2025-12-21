@@ -32,7 +32,9 @@ PRODUCTION = os.getenv('PRODUCTION', 'False').lower == 'true'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'valerian-hizkia-matchplay.pbp.cs.ui.ac.id']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'valerian-hizkia-matchplay.pbp.cs.ui.ac.id', '10.0.2.2']
+
+CORS_ALLOW_ALL_ORIGINS = True
 
 # Application definition
 
@@ -144,18 +146,10 @@ CORS_ALLOWED_ORIGINS = [
 
 CSRF_TRUSTED_ORIGINS = [
     "https://valerian-hizkia-matchplay.pbp.cs.ui.ac.id",
-    "http://localhost:57383",
-    "http://localhost:3000",
-    "http://127.0.0.1:8000",
-    "http://127.0.0.1:3000",
+    'http://localhost', 
+    'http://127.0.0.1', 
+    'http://10.0.2.2',
 ]
-
-SESSION_COOKIE_SAMESITE = 'Lax'
-CSRF_COOKIE_SAMESITE = 'Lax'
-SESSION_COOKIE_SECURE = False
-CSRF_COOKIE_SECURE = False
-CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_ALL_ORIGINS = False
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
@@ -190,3 +184,10 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SAMESITE = 'None'
+SESSION_COOKIE_SAMESITE = 'None'
