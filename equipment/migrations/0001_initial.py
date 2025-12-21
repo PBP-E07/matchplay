@@ -28,6 +28,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('renter_name', models.CharField(max_length=100)),
+                ('quantity_rented', models.PositiveIntegerField(default=1)),
                 ('start_time', models.DateTimeField()),
                 ('end_time', models.DateTimeField()),
                 ('total_cost', models.DecimalField(blank=True, decimal_places=2, max_digits=10, null=True)),

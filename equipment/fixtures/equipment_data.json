@@ -5,7 +5,7 @@
       "fields": {
         "name": "Raket Tenis Wilson",
         "quantity": 5,
-        "price_per_hour": "50.000,00",
+        "price_per_hour": "50000.00",
         "description": "Raket pro, ringan dan kuat.",
         "image": "https://www.static-src.com/wcsstore/Indraprastha/images/catalog/full/catalog-image/114/MTA-159628398/wilson_raket-tenis-wilson-impact-2024-beginner-tennis-racket-wilson-original_full01.jpg"
       }
@@ -16,9 +16,449 @@
       "fields": {
         "name": "Sepatu Futsal Nike",
         "quantity": 3,
-        "price_per_hour": "30.000,00",
+        "price_per_hour": "30000.00",
         "description": "Ukuran 40-43 tersedia.",
         "image": "https://img.ncrsport.com/img/storage/large/AT7975-001-1.jpg"
+      }
+    },
+    {
+      "model": "equipment.equipment",
+      "pk": 1,
+      "fields": {
+        "name": "Bola Basket Spalding TF-1000",
+        "quantity": 12,
+        "price_per_hour": "20000.00",
+        "description": "Bola basket indoor profesional dengan grip maksimal.",
+        "image": "https://images.unsplash.com/photo-1546519638-68e109498ffc"
+      }
+    },
+    {
+      "model": "equipment.equipment",
+      "pk": 2,
+      "fields": {
+        "name": "Raket Badminton Yonex Astrox 99",
+        "quantity": 8,
+        "price_per_hour": "35000.00",
+        "description": "Raket ofensif untuk smash keras, dipakai pemain pro.",
+        "image": "https://images.unsplash.com/photo-1626225967045-9c730a0a06bb"
+      }
+    },
+    {
+      "model": "equipment.equipment",
+      "pk": 3,
+      "fields": {
+        "name": "Bola Sepak Adidas Al Rihla",
+        "quantity": 15,
+        "price_per_hour": "15000.00",
+        "description": "Bola resmi FIFA World Cup, stabil di udara.",
+        "image": "https://images.unsplash.com/photo-1614632537423-1e6c2e74c519"
+      }
+    },
+    {
+      "model": "equipment.equipment",
+      "pk": 4,
+      "fields": {
+        "name": "Raket Padel Bullpadel Hack 03",
+        "quantity": 6,
+        "price_per_hour": "45000.00",
+        "description": "Raket padel kelas dunia untuk kontrol dan power tinggi.",
+        "image": "https://images.unsplash.com/photo-1626964434241-1191f659d646"
+      }
+    },
+    {
+      "model": "equipment.equipment",
+      "pk": 5,
+      "fields": {
+        "name": "Raket Tenis Wilson Clash v2",
+        "quantity": 10,
+        "price_per_hour": "40000.00",
+        "description": "Keseimbangan sempurna antara fleksibilitas dan stabilitas.",
+        "image": "https://images.unsplash.com/photo-1622279457486-62dcc4a4bd13"
+      }
+    },
+    {
+      "model": "equipment.equipment",
+      "pk": 6,
+      "fields": {
+        "name": "Kacamata Renang Speedo Vanquisher",
+        "quantity": 20,
+        "price_per_hour": "10000.00",
+        "description": "Lensa anti-fog dengan perlindungan UV untuk kompetisi.",
+        "image": "https://images.unsplash.com/photo-1530549387631-afb16881947a"
+      }
+    },
+    {
+      "model": "equipment.equipment",
+      "pk": 7,
+      "fields": {
+        "name": "Matras Yoga Lululemon 5mm",
+        "quantity": 25,
+        "price_per_hour": "15000.00",
+        "description": "Permukaan anti-slip, empuk untuk persendian.",
+        "image": "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b"
+      }
+    },
+    {
+      "model": "equipment.equipment",
+      "pk": 8,
+      "fields": {
+        "name": "Bola Voli Mikasa V200W",
+        "quantity": 14,
+        "price_per_hour": "15000.00",
+        "description": "Bola resmi kompetisi internasional FIVB.",
+        "image": "https://images.unsplash.com/photo-1592656670408-3c14643a5304"
+      }
+    },
+    {
+      "model": "equipment.equipment",
+      "pk": 9,
+      "fields": {
+        "name": "Sarung Tangan Tinju Everlast Pro 12oz",
+        "quantity": 8,
+        "price_per_hour": "25000.00",
+        "description": "Perlindungan maksimal untuk pergelangan tangan.",
+        "image": "https://images.unsplash.com/photo-1549719386-74dfcbf7dbed"
+      }
+    },
+    {
+      "model": "equipment.equipment",
+      "pk": 10,
+      "fields": {
+        "name": "Papan Seluncur Skateboard Element",
+        "quantity": 5,
+        "price_per_hour": "30000.00",
+        "description": "Lengkap dengan truck dan roda berkualitas tinggi.",
+        "image": "https://images.unsplash.com/photo-1520156582985-31368bd1f075"
+      }
+    },
+    {
+      "model": "equipment.equipment",
+      "pk": 11,
+      "fields": {
+        "name": "Bola Futsal Molten Vantaggio",
+        "quantity": 18,
+        "price_per_hour": "12000.00",
+        "description": "Pantulan rendah khusus untuk lapangan futsal indoor.",
+        "image": "https://images.unsplash.com/photo-1574629810360-7efbbe195018"
+      }
+    },
+    {
+      "model": "equipment.equipment",
+      "pk": 12,
+      "fields": {
+        "name": "Sepatu Roda Rollerblade RB Cruiser",
+        "quantity": 7,
+        "price_per_hour": "35000.00",
+        "description": "Sangat nyaman dan stabil untuk pemula hingga menengah.",
+        "image": "https://images.unsplash.com/photo-1563299796-17596ed6b017"
+      }
+    },
+    {
+      "model": "equipment.equipment",
+      "pk": 13,
+      "fields": {
+        "name": "Meja Pingpong Butterfly Centrefold 25",
+        "quantity": 3,
+        "price_per_hour": "60000.00",
+        "description": "Meja standar turnamen dunia, permukaan anti-silau.",
+        "image": "https://images.unsplash.com/photo-1534158914592-062992fbe900"
+      }
+    },
+    {
+      "model": "equipment.equipment",
+      "pk": 14,
+      "fields": {
+        "name": "Bet Tenis Meja DHS Hurricane Hao",
+        "quantity": 12,
+        "price_per_hour": "20000.00",
+        "description": "Karet high-tension untuk spin yang mematikan.",
+        "image": "https://images.unsplash.com/photo-1611003228941-98a52e66f2ff"
+      }
+    },
+    {
+      "model": "equipment.equipment",
+      "pk": 15,
+      "fields": {
+        "name": "Stik Golf Callaway Rogue ST",
+        "quantity": 5,
+        "price_per_hour": "75000.00",
+        "description": "Driver dengan teknologi AI untuk jarak tempuh maksimal.",
+        "image": "https://images.unsplash.com/photo-1535131749006-b7f58c99034b"
+      }
+    },
+    {
+      "model": "equipment.equipment",
+      "pk": 16,
+      "fields": {
+        "name": "Pelampung Life Jacket Yamaha",
+        "quantity": 15,
+        "price_per_hour": "15000.00",
+        "description": "Keamanan ekstra untuk olahraga air dan snorkeling.",
+        "image": "https://images.unsplash.com/photo-1544644181-1484b3fdfc62"
+      }
+    },
+    {
+      "model": "equipment.equipment",
+      "pk": 17,
+      "fields": {
+        "name": "Bola Rugby Gilbert G-TR4000",
+        "quantity": 10,
+        "price_per_hour": "20000.00",
+        "description": "Tekstur triangular grip yang awet digunakan latihan.",
+        "image": "https://images.unsplash.com/photo-1589801258279-173774c144bc"
+      }
+    },
+    {
+      "model": "equipment.equipment",
+      "pk": 18,
+      "fields": {
+        "name": "Busur Panah Recurve Junxing F161",
+        "quantity": 4,
+        "price_per_hour": "50000.00",
+        "description": "Riser aluminium kokoh, cocok untuk jarak menengah.",
+        "image": "https://images.unsplash.com/photo-1511078573294-436029792040"
+      }
+    },
+    {
+      "model": "equipment.equipment",
+      "pk": 19,
+      "fields": {
+        "name": "Helm Sepeda Specialized Align II",
+        "quantity": 12,
+        "price_per_hour": "20000.00",
+        "description": "Dilengkapi sistem proteksi MIPS untuk keamanan kepala.",
+        "image": "https://images.unsplash.com/photo-1596464716127-f2a82984de30"
+      }
+    },
+    {
+      "model": "equipment.equipment",
+      "pk": 20,
+      "fields": {
+        "name": "Tali Skipping Rogue SR-1 Bearing",
+        "quantity": 30,
+        "price_per_hour": "8000.00",
+        "description": "Speed rope ultra cepat untuk latihan cardio intens.",
+        "image": "https://images.unsplash.com/photo-1594737625785-a209b5329528"
+      }
+    },
+    {
+      "model": "equipment.equipment",
+      "pk": 21,
+      "fields": {
+        "name": "Kettlebell Rogue 16kg",
+        "quantity": 10,
+        "price_per_hour": "25000.00",
+        "description": "Besi cor solid dengan grip yang tidak licin.",
+        "image": "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61"
+      }
+    },
+    {
+      "model": "equipment.equipment",
+      "pk": 22,
+      "fields": {
+        "name": "Dumbbell Set 10kg Chrome",
+        "quantity": 15,
+        "price_per_hour": "20000.00",
+        "description": "Beban yang bisa disesuaikan, lapisan chrome anti karat.",
+        "image": "https://images.unsplash.com/photo-1586401100295-7a8096fd231a"
+      }
+    },
+    {
+      "model": "equipment.equipment",
+      "pk": 23,
+      "fields": {
+        "name": "Sepatu Lari Hoka Clifton 8",
+        "quantity": 6,
+        "price_per_hour": "40000.00",
+        "description": "Sangat empuk, cocok untuk lari jarak jauh.",
+        "image": "https://images.unsplash.com/photo-1542291026-7eec264c27ff"
+      }
+    },
+    {
+      "model": "equipment.equipment",
+      "pk": 24,
+      "fields": {
+        "name": "Bola Squash Dunlop Pro 2 Dots",
+        "quantity": 25,
+        "price_per_hour": "8000.00",
+        "description": "Bola standar turnamen squash dunia.",
+        "image": "https://images.unsplash.com/photo-1593341604414-046603d601de"
+      }
+    },
+    {
+      "model": "equipment.equipment",
+      "pk": 25,
+      "fields": {
+        "name": "Raket Squash Head Graphene 360",
+        "quantity": 8,
+        "price_per_hour": "35000.00",
+        "description": "Power maksimal dengan bobot raket yang ringan.",
+        "image": "https://images.unsplash.com/photo-1554068865-24bc94e3732a"
+      }
+    },
+    {
+      "model": "equipment.equipment",
+      "pk": 26,
+      "fields": {
+        "name": "Shuttlecock Yonex Aerosensa 50",
+        "quantity": 100,
+        "price_per_hour": "5000.00",
+        "description": "Bulu angsa pilihan, akurasi terbang yang stabil.",
+        "image": "https://images.unsplash.com/photo-1613918108466-292b78a8ef95"
+      }
+    },
+    {
+      "model": "equipment.equipment",
+      "pk": 27,
+      "fields": {
+        "name": "Pelindung Gigi (Mouthguard) Shock Doctor",
+        "quantity": 40,
+        "price_per_hour": "5000.00",
+        "description": "Proteksi dental untuk olahraga kontak keras.",
+        "image": "https://images.unsplash.com/photo-1598256989800-fe5f95da9787"
+      }
+    },
+    {
+      "model": "equipment.equipment",
+      "pk": 28,
+      "fields": {
+        "name": "Bola Baseball Rawlings Official",
+        "quantity": 20,
+        "price_per_hour": "10000.00",
+        "description": "Kulit asli dengan jahitan tangan standar MLB.",
+        "image": "https://images.unsplash.com/photo-1516731415730-0c607149933a"
+      }
+    },
+    {
+      "model": "equipment.equipment",
+      "pk": 29,
+      "fields": {
+        "name": "Pemukul Baseball (Bat) Louisville Slugger",
+        "quantity": 6,
+        "price_per_hour": "30000.00",
+        "description": "Kayu mapel solid, sweet spot yang luas.",
+        "image": "https://images.unsplash.com/photo-1530331002265-38b826507817"
+      }
+    },
+    {
+      "model": "equipment.equipment",
+      "pk": 30,
+      "fields": {
+        "name": "Glove Baseball Wilson A2000",
+        "quantity": 5,
+        "price_per_hour": "35000.00",
+        "description": "Kulit Pro Stock yang sangat tahan lama dan nyaman.",
+        "image": "https://images.unsplash.com/photo-1508344928928-7165b67de128"
+      }
+    },
+    {
+      "model": "equipment.equipment",
+      "pk": 31,
+      "fields": {
+        "name": "Papan Seluncur Air (Surfboard) Quiksilver",
+        "quantity": 4,
+        "price_per_hour": "65000.00",
+        "description": "Model funboard, cocok untuk ombak pantai sedang.",
+        "image": "https://images.unsplash.com/photo-1502680390469-be75c86b636f"
+      }
+    },
+    {
+      "model": "equipment.equipment",
+      "pk": 32,
+      "fields": {
+        "name": "Sirip Renang (Fins) Arena Powerfin",
+        "quantity": 12,
+        "price_per_hour": "15000.00",
+        "description": "Membantu melatih kekuatan kaki saat berenang.",
+        "image": "https://images.unsplash.com/photo-1551966775-a4ddc8df052b"
+      }
+    },
+    {
+      "model": "equipment.equipment",
+      "pk": 33,
+      "fields": {
+        "name": "Dartboard Winmau Blade 6",
+        "quantity": 5,
+        "price_per_hour": "25000.00",
+        "description": "Papan dart profesional tanpa kawat pemisah yang tebal.",
+        "image": "https://images.unsplash.com/photo-1591535798918-09559c636f01"
+      }
+    },
+    {
+      "model": "equipment.equipment",
+      "pk": 34,
+      "fields": {
+        "name": "Anak Panah Dart Tungsten 24g",
+        "quantity": 10,
+        "price_per_hour": "15000.00",
+        "description": "Presisi tinggi dengan grip yang mantap di jari.",
+        "image": "https://images.unsplash.com/photo-1629901976594-824620496316"
+      }
+    },
+    {
+      "model": "equipment.equipment",
+      "pk": 35,
+      "fields": {
+        "name": "Samsak Tinju (Heavy Bag) Fairtex",
+        "quantity": 4,
+        "price_per_hour": "40000.00",
+        "description": "Kulit sintetis tebal, tahan lama untuk latihan Muay Thai.",
+        "image": "https://images.unsplash.com/photo-1599058917233-35991837651a"
+      }
+    },
+    {
+      "model": "equipment.equipment",
+      "pk": 36,
+      "fields": {
+        "name": "Headgear Boxing Winning",
+        "quantity": 3,
+        "price_per_hour": "30000.00",
+        "description": "Proteksi wajah terbaik, sangat ringan dan empuk.",
+        "image": "https://images.unsplash.com/photo-1509563268479-0f00373b4527"
+      }
+    },
+    {
+      "model": "equipment.equipment",
+      "pk": 37,
+      "fields": {
+        "name": "Bola Bowling Brunswick TZone",
+        "quantity": 10,
+        "price_per_hour": "35000.00",
+        "description": "Lapisan polyester licin, cocok untuk lurus (straight).",
+        "image": "https://images.unsplash.com/photo-1538510532971-12e70823c6d7"
+      }
+    },
+    {
+      "model": "equipment.equipment",
+      "pk": 38,
+      "fields": {
+        "name": "Sepatu Bowling Dexter Ricky IV",
+        "quantity": 15,
+        "price_per_hour": "15000.00",
+        "description": "Dilengkapi microfiber slide pad di kedua sepatu.",
+        "image": "https://images.unsplash.com/photo-1544126592-807daf21565c"
+      }
+    },
+    {
+      "model": "equipment.equipment",
+      "pk": 39,
+      "fields": {
+        "name": "Tali Panjat Tebing Beal Apollo 11mm",
+        "quantity": 5,
+        "price_per_hour": "50000.00",
+        "description": "Tali statis sangat kuat untuk keamanan pendakian.",
+        "image": "https://images.unsplash.com/photo-1522163182402-834f871fd851"
+      }
+    },
+    {
+      "model": "equipment.equipment",
+      "pk": 40,
+      "fields": {
+        "name": "Harness Climbing Black Diamond",
+        "quantity": 8,
+        "price_per_hour": "30000.00",
+        "description": "Nyaman dipakai lama, distribusi beban yang merata.",
+        "image": "https://images.unsplash.com/photo-1516627145497-ae6968895b74"
       }
     }
   ]
