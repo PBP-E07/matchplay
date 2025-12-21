@@ -1,5 +1,5 @@
 from django.urls import path
-from tournament.views import tournament_list, tournament_detail, tournament_matches, get_tournaments_json, create_tournament, edit_tournament, delete_tournament, create_match, edit_match, delete_match, get_matches_json, join_tournament, create_tournament_api, create_match_api
+from tournament.views import tournament_list, tournament_detail, tournament_matches, get_tournaments_json, get_tournament_teams, create_tournament, edit_tournament, delete_tournament, create_match, edit_match, delete_match, get_matches_json, join_tournament, create_tournament_api, create_match_api, join_tournament_api
 
 app_name = 'tournament'
 
@@ -18,4 +18,6 @@ urlpatterns = [
     path('<int:pk>/matches/<int:match_id>/delete/', delete_match, name='delete_match'),
     path('api/tournament/create/', create_tournament_api, name='api_create_tournament'),
     path('api/tournament/<int:pk>/matches/create/', create_match_api, name='api_create_match'),
+    path('api/tournament/<int:pk>/teams/', get_tournament_teams, name='get_tournament_teams'),
+    path('api/<int:pk>/join/', join_tournament_api, name='join_tournament_api'),
 ]
