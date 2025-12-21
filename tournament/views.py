@@ -40,34 +40,34 @@ def tournament_matches(request, pk):
 
 # GET TOURNAMENT JSON
 def get_tournaments_json(request):
-    filter_type = request.GET.get("status")  
+    filter_type = request.GET.get("status")     
+    tournaments = Tournament.objects.all().order_by("-id")
 
-    tournaments = Tournament.objects.filter(is_private=False).order_by("-start_date")
-
-    if request.user.is_authenticated:
-        user_private = Tournament.objects.filter(is_private=True, created_by=request.user)
-        tournaments = (tournaments | user_private).distinct()
-
-    if filter_type == "private" and request.user.is_authenticated:
-        tournaments = tournaments.filter(is_private=True, created_by=request.user)
+    if filter_type == "private":
+        tournaments = tournaments.filter(is_private=True)
     elif filter_type == "public":
         tournaments = tournaments.filter(is_private=False)
 
-    data = [
-        {
+    data = []
+    for t in tournaments:
+        is_owner = request.user.is_authenticated and request.user == t.created_by
+
+        data.append({
             "id": t.id,
             "name": t.name,
             "location": t.location,
             "banner_image": t.banner_image,
             "prize_pool": t.prize_pool,
             "start_date": t.start_date,
+            "end_date": t.end_date,       
+            "description": t.description, 
+            "sport_type": t.sport_type,   
             "is_private": t.is_private,
             "total_teams": t.teams.count(),
-        }
-        for t in tournaments
-    ]
+            "is_creator": is_owner, 
+        })
+        
     return JsonResponse(data, safe=False)
-
 def get_matches_json(request, pk):
     tournament = get_object_or_404(Tournament, pk=pk)
     matches = tournament.matches.all().order_by('round_number')
@@ -393,6 +393,9 @@ def create_tournament_api(request):
             start_date=start_date,
             end_date=end_date,
             description=data.get("description", ""),
+            prize_pool=data.get("prize_pool", ""),    
+            banner_image=data.get("banner_image", ""), 
+            
             is_private=False, 
             created_by=request.user if request.user.is_authenticated else None 
         )
@@ -408,6 +411,8 @@ def create_tournament_api(request):
 
     except json.JSONDecodeError:
         return JsonResponse({"status": "error", "message": "Invalid JSON"}, status=400)
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
 # POST API MATCHES
 @csrf_exempt
@@ -454,3 +459,86 @@ def get_tournament_teams(request, pk):
     data = [{"id": t.id, "name": t.name} for t in teams]
     return JsonResponse(data, safe=False)
 
+@csrf_exempt
+@require_http_methods(["POST"])
+def edit_match_api(request, pk, match_id):
+    try:
+        tournament = get_object_or_404(Tournament, pk=pk)
+        match = get_object_or_404(Match, pk=match_id, tournament=tournament)
+
+        data = json.loads(request.body)
+        
+        # Update Skor
+        if 'score_team1' in data:
+            match.score_team1 = int(data['score_team1'])
+        if 'score_team2' in data:
+            match.score_team2 = int(data['score_team2'])
+            
+        match.save()
+
+        return JsonResponse({"status": "success", "message": "Skor berhasil diupdate"}, status=200)
+
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+@csrf_exempt
+@require_http_methods(["DELETE", "POST"]) 
+def delete_match_api(request, pk, match_id):
+    try:
+        tournament = get_object_or_404(Tournament, pk=pk)
+        match = get_object_or_404(Match, pk=match_id, tournament=tournament)
+        
+        match.delete()
+        
+        return JsonResponse({"status": "success", "message": "Match berhasil dihapus"}, status=200)
+
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def edit_tournament_api(request, pk):
+    try:
+        tournament = get_object_or_404(Tournament, pk=pk)
+        
+        if request.user != tournament.created_by:
+             return JsonResponse({"status": "error", "message": "Unauthorized"}, status=403)
+
+        data = json.loads(request.body)
+        
+        tournament.name = data.get("name", tournament.name)
+        tournament.sport_type = data.get("sport_type", tournament.sport_type)
+        tournament.location = data.get("location", tournament.location)
+        tournament.description = data.get("description", tournament.description)
+        tournament.prize_pool = data.get("prize_pool", tournament.prize_pool) 
+        tournament.banner_image = data.get("banner_image", tournament.banner_image)
+        
+        start_date_str = data.get("start_date")
+        end_date_str = data.get("end_date")
+        
+        if start_date_str:
+             tournament.start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
+        if end_date_str:
+             tournament.end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
+
+        tournament.save()
+
+        return JsonResponse({"status": "success", "message": "Turnamen berhasil diupdate"}, status=200)
+
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+@csrf_exempt
+@require_http_methods(["POST", "DELETE"])
+def delete_tournament_api(request, pk):
+    try:
+        tournament = get_object_or_404(Tournament, pk=pk)
+        
+        if request.user != tournament.created_by:
+             return JsonResponse({"status": "error", "message": "Unauthorized"}, status=403)
+        
+        tournament.delete()
+        return JsonResponse({"status": "success", "message": "Turnamen berhasil dihapus"}, status=200)
+
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
