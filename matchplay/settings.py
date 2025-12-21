@@ -27,7 +27,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure--62fyj!1cq$q+=gdw8ursj*)0a6((=89_0u$&a4p7u!k49gfm%'
 
-PRODUCTION = os.getenv('PRODUCTION', 'False').lower == 'true'
+PRODUCTION = os.getenv('PRODUCTION', 'False').lower() == 'true'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -139,11 +139,15 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/' 
+LOGOUT_REDIRECT_URL = '/login/'
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000"
 ]
+
+CORS_ALLOW_CREDENTIALS = True
 
 CSRF_TRUSTED_ORIGINS = [
     "https://valerian-hizkia-matchplay.pbp.cs.ui.ac.id",
@@ -186,14 +190,12 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOW_CREDENTIALS = True
 
 CSRF_COOKIE_SAMESITE = 'Lax'
 SESSION_COOKIE_SAMESITE = 'Lax'
 
-CSRF_COOKIE_SECURE = False
-SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = PRODUCTION
+SESSION_COOKIE_SECURE = PRODUCTION
 
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:8000",
