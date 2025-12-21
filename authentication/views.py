@@ -75,32 +75,29 @@ def logout_json(request):
 
 @csrf_exempt
 def login_json(request):
-    data = json.loads(request.body)
-
-    username = data["username"]
-    password = data["password"]
+    username = request.POST['username']
+    password = request.POST['password']
     user = authenticate(username=username, password=password)
-
     if user is not None:
         if user.is_active:
             login(request, user)
-
+            # Login status successful.
             return JsonResponse({
-                "status": True,
                 "username": user.username,
-                "message": "Login successful"
+                "status": True,
+                "message": "Login successful!"
+                # Add other data if you want to send data to Flutter.
             }, status=200)
-        
         else:
             return JsonResponse({
                 "status": False,
-                "message": "Login failed, account is disabled"
+                "message": "Login failed, account is disabled."
             }, status=401)
 
     else:
         return JsonResponse({
             "status": False,
-            "message": "Login failed, please check your username or password"
+            "message": "Login failed, please check your username or password."
         }, status=401)
 
 @csrf_exempt
@@ -114,13 +111,13 @@ def register_json(request):
 
         if password1 != password2:
             return JsonResponse({
-                "status": False,
+                "status": "failed",
                 "message": "Passwords do not match"
             }, status=400)
         
         if User.objects.filter(username=username).exists():
             return JsonResponse({
-                "status": False,
+                "status": "failed",
                 "message": "Username already exists"
             }, status=400)
         
@@ -129,13 +126,13 @@ def register_json(request):
         user.save()
         
         return JsonResponse({
-            "status": True,
+            "status": "success",
             "username": user.username,
             "message": "User created successfully"
         }, status=200)
     
     else:
         return JsonResponse({
-            "status": False,
+            "status": "failed",
             "message": "Invalid request method"
         }, status=400)
