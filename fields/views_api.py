@@ -5,8 +5,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
-from fields.models import Field
-from fields.serializers import FieldSerializer
+from fields.models import Field, Facility
+from fields.serializers import FieldSerializer, FacilitySerializer
 
 # ===== HELPER METHOD =====
 
@@ -97,7 +97,7 @@ def handle_validation_and_save(serializer, success_status=status.HTTP_200_OK):
 # ===== VIEWS METHOD =====
 
 @api_view(['GET', 'POST'])
-@permission_classes([IsAuthenticated])
+# @permission_classes([IsAuthenticated])
 def field_list_api(request):
     """
     GET: Tampilkan semua fields (JSON)
@@ -128,17 +128,17 @@ def field_list_api(request):
 
     # POST hanya boleh diakses oleh admin (is_staff)
     elif request.method == 'POST':
-        if not request.user.is_staff:
-             return Response(
-                {"status": "error", "message": "Hanya admin yang boleh menambahkan data!"},
-                status=status.HTTP_403_FORBIDDEN
-            )
+        # if not request.user.is_staff:
+        #      return Response(
+        #         {"status": "error", "message": "Hanya admin yang boleh menambahkan data!"},
+        #         status=status.HTTP_403_FORBIDDEN
+        #     )
         serializer = FieldSerializer(data=request.data)
         return handle_validation_and_save(serializer, success_status=status.HTTP_201_CREATED)
 
 
 @api_view(['GET', 'PATCH', 'DELETE'])
-@permission_classes([IsAuthenticated])
+# @permission_classes([IsAuthenticated])
 def field_detail_api(request, pk):
     """
     GET: Ambil satu field detail
@@ -153,11 +153,11 @@ def field_detail_api(request, pk):
         return Response(serializer.data)
 
     # Cek apakah user adalah admin (is_staff) sebelum lanjut ke PATCH atau DELETE
-    if not request.user.is_staff:
-        return Response(
-            {"status": "error", "message": "Hanya admin yang boleh mengubah/menghapus data."},
-            status=status.HTTP_403_FORBIDDEN
-        )
+    # if not request.user.is_staff:
+    #     return Response(
+    #         {"status": "error", "message": "Hanya admin yang boleh mengubah/menghapus data."},
+    #         status=status.HTTP_403_FORBIDDEN
+    #     )
 
     # PATCH hanya boleh diakses oleh admin (is_staff)
     if request.method == 'PATCH':
@@ -171,3 +171,17 @@ def field_detail_api(request, pk):
             "status": "success", 
             "message": "Data berhasil dihapus"
         }, status=status.HTTP_204_NO_CONTENT)
+    
+
+@api_view(['GET'])
+# @permission_classes([IsAuthenticated])
+def facility_list_api(request):
+    """
+    GET: Tampilkan semua fasilitas (untuk pilihan di form)
+    """
+    facilities = Facility.objects.all().order_by('name')
+    serializer = FacilitySerializer(facilities, many=True)
+    return Response({
+        "status": "success",
+        "data": serializer.data
+    })

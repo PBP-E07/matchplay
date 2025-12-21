@@ -8,3 +8,4 @@ python-dotenv
 coverage
 Pillow
 djangorestframework
+django-cors-headers
