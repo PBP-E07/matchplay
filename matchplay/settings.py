@@ -32,7 +32,7 @@ PRODUCTION = os.getenv('PRODUCTION', 'False').lower() == 'true'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'https://valerian-hizkia-matchplay.pbp.cs.ui.ac.id', '10.0.2.2']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'valerian-hizkia-matchplay.pbp.cs.ui.ac.id', '10.0.2.2']
 
 CORS_ALLOW_ALL_ORIGINS = True
 
